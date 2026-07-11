@@ -1,0 +1,27 @@
+---
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-sans/700.css';
+import '@fontsource/ibm-plex-sans/400-italic.css';
+import '@fontsource/monomakh/400.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+const { title = 'Свято-Богоявленський Кременецький монастир', description = 'Онлайн-подача церковних записок за здоровя та за упокій.' } = Astro.props;
+---
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="/logo.png" />
+</head>
+<body>
+  <Header />
+  <slot />
+  <Footer />
+</body>
+</html>

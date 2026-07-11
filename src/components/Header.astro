@@ -1,0 +1,25 @@
+---
+import { NAV } from '../data/nav.js';
+const ready = NAV.filter(n => n.ready);
+const path = Astro.url.pathname;
+const isOn = (href) => href === path;
+const multi = ready.length > 1;
+---
+<header class="xhead">
+  <div class="xbar">
+    <a class="xbrand" href="/"><img class="xlogo" src="/logo.png" alt="Герб обителі" width="50" height="50" />
+      <span class="xwm"><b>Свято-Богоявленський<br />Кременецький монастир</b></span></a>
+    <nav class="xnav">
+      {ready.map((n) => <a href={n.href} class={isOn(n.href) ? 'on' : ''}>{n.label}</a>)}
+      <span class="xlangs">UK · RU · EN</span>
+    </nav>
+    {multi && (
+      <button class="xburger" aria-label="Меню" onclick="document.getElementById('xmnav').classList.toggle('open')"><span></span><span></span><span></span></button>
+    )}
+  </div>
+  {multi && (
+    <nav class="xmnav" id="xmnav">
+      {ready.map((n) => <a href={n.href} class={isOn(n.href) ? 'on' : ''}>{n.label}</a>)}
+    </nav>
+  )}
+</header>
