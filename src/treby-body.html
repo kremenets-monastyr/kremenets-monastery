@@ -1,0 +1,83 @@
+<section class="hero"><div class="wrap">
+  <div class="badge"><img src="/logo.png" alt=""></div>
+  <div class="kicker">Свято-Богоявленський Кременецький монастир</div>
+  <h1>Записний стіл</h1>
+  <p class="subttl">Подача церковних записок за здоров'я та за упокій</p>
+  <p class="lead">Подайте записку на молитву в обителі, не виходячи з дому. Оберіть требу, впишіть імена.</p>
+  <div class="hero-cta">
+    <a href="#stil" class="cta">Заповнити записку <span aria-hidden="true">&rarr;</span></a>
+    <a href="#treby" class="cta2">Переглянути види треб</a>
+  </div>
+  <p class="note">Оплата за треби — це Ваш благодійний внесок</p>
+</div></section>
+
+<section class="sec" id="stil"><div class="wrap">
+  <div class="sec-head">
+    <div class="cr" id="sc"></div>
+    <div class="n">Записка</div>
+    <h2>Оберіть молитву</h2>
+    <p>«За здоров'я» — за живих, «За упокій» — за спочилих. Кожна записка — це одна треба; впишіть до неї імена. Для іншої треби створіть нову записку.</p>
+  </div>
+  <div class="choose">
+    <div class="choice living" onclick="addSheet('living')">
+      <div class="cr"></div><div class="ttl">За здоров'я</div>
+      <div class="clines"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="desc">за живих</div>
+      <div class="cbtn">Подати записку</div>
+    </div>
+    <div class="choice dead" onclick="addSheet('dead')">
+      <div class="cr"></div><div class="ttl">За упокій</div>
+      <div class="clines"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="desc">за спочилих</div>
+      <div class="cbtn">Подати записку</div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="stil2" style="display:none"><div class="wrap">
+  <div class="sec-head">
+    <div class="cr" id="sc2"></div>
+    <div class="n">Ваші записки</div>
+    <h2>Ваш стіл</h2>
+    <p>Готові записки. Імена пишіть у родовому відмінку (Іоанна, Марії), лише хрещені православні. Перевірте й надішліть нам на молитву.</p>
+  </div>
+  <div id="sheets"></div>
+  <div class="checkout" id="checkout" style="display:none">
+    <div class="co-left">
+      <h3>Ваші записки</h3>
+      <div id="summary"></div>
+    </div>
+    <div class="co-right">
+      <div class="crow total"><span class="nm">До сплати</span><span class="v" id="grand">0 грн</span></div>
+      <div class="field"><label>Ваше ім’я <span class="req">*</span></label><input type="text" placeholder="Ім’я (як до вас звертатися)" id="uname"></div>
+      <div class="field"><label>Контактний номер телефону <span class="req">*</span></label><input type="tel" placeholder="+380 __ ___ __ __" id="phone"></div>
+      <input type="text" id="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <button class="send" onclick="sendOrder()">Подати на молитву</button>
+      <p class="formmsg" id="formmsg"></p>
+      <p class="hint">Ми зв'яжемося з вами для підтвердження. За відсутності можливості внести пожертву — треби приймаються безкоштовно.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="treby" style="background:var(--bg-soft);border-top:1px solid var(--line-soft)"><div class="wrap">
+  <div class="sec-head">
+    <div class="n">Список треб</div>
+    <h2>Види молитов</h2>
+    <p>Оберіть «За здоров'я» чи «За упокій» біля потрібної треби — записка створиться автоматично.</p>
+  </div>
+  <div id="trebaList" style="max-width:920px;margin:0 auto"></div>
+  <p class="hint" style="margin-top:28px">Гроші на молитовне поминання приймаються як жертва на монастир.</p>
+</div></section>
+
+<section class="info" id="info"><div class="wrap">
+  <div><div class="num">1</div><h4>Заповніть записку</h4><p>Оберіть требу, впишіть імена з приписками — як «митрополит Андроник, путешествующий».</p></div>
+  <div><div class="num">2</div><h4>Надішліть нам</h4><p>Готові записки одним дотиком ідуть у наш Telegram разом із вашим номером.</p></div>
+  <div><div class="num">3</div><h4>Молитва в обителі</h4><p>Сестри приймають записки до поминання перед чтимою іконою Богородиці «Скорботна».</p></div>
+</div></section>
+
+<nav class="botnav" id="botnav" aria-label="Розділи">
+  <a href="#stil"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18 10l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg></span><span>Подати</span></a>
+  <a href="#treby"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span><span>Види треб</span></a>
+  <a href="#info"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg></span><span>Довідка</span></a>
+  <a href="#stil2" id="railstil" style="display:none"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span><span>Ваш стіл</span></a>
+</nav>
