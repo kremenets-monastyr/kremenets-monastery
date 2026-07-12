@@ -36,8 +36,44 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .req pre{font-family:'IBM Plex Sans',sans-serif;white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.55;margin-bottom:12px}
 .note{font-size:13px;color:var(--muted);margin-bottom:20px;text-align:center;line-height:1.55}
 .muted{color:var(--muted);font-size:14px;text-align:center}
-.btn{display:block;text-align:center;background:var(--blue-deep);color:#fff;text-decoration:none;padding:14px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13px}
-.btn2{width:100%;background:transparent;border:1.5px solid var(--blue);color:var(--blue);padding:11px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:12px;cursor:pointer}
+.btn{display:block;text-align:center;background:var(--blue-deep);color:#fff;text-decoration:none;padding:14px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13px;transition:.18s;box-shadow:0 10px 24px rgba(22,35,76,.22)}
+.btn:hover{background:var(--blue);transform:translateY(-2px)}
+.btn2{width:100%;background:transparent;border:1.5px solid var(--blue);color:var(--blue);padding:11px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:12px;cursor:pointer;transition:.18s}
+.btn2:hover{background:var(--blue);color:#fff;transform:translateY(-1px)}
+.btn2:active{transform:none}
+.donate{background:#EEF3FB;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--ink);text-align:center;margin-bottom:16px}
+.donate b{color:var(--blue)}
+.share{margin-bottom:18px}
+.share-t{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:center;margin-bottom:10px}
+.share-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.sh{font-size:12px;font-weight:600;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);color:var(--blue);background:#fff;text-decoration:none;cursor:pointer;transition:.15s}
+.sh:hover{border-color:var(--blue);background:#E4EBF7;transform:translateY(-1px)}
+.rc{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:16px 18px;text-align:center;margin-bottom:18px}
+.rc-t{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.rc-p{font-size:13px;color:var(--muted);margin-bottom:12px}
+.rc input[type=file]{font-size:13px;max-width:100%;margin-bottom:10px}
+.rc-msg{font-size:13px;min-height:16px;margin-top:8px}
+.rc-msg.ok{color:var(--blue)}.rc-msg.err{color:var(--red)}
+`;
+
+const SCRIPT = `
+var CODE = __CODE__, LINK = location.origin + '/z/' + CODE;
+var cp = document.getElementById('cpLink');
+if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(LINK); var o=cp.textContent; cp.textContent='Скопійовано \u2713'; setTimeout(function(){cp.textContent=o;},1500); });
+var rq = document.querySelector('.req .btn2');
+if (rq) rq.addEventListener('click', function(){ var o=rq.textContent; rq.textContent='Скопійовано \u2713'; setTimeout(function(){rq.textContent=o;},1500); });
+var f=document.getElementById('rcFile'), b=document.getElementById('rcSend'), m=document.getElementById('rcMsg');
+if (b) b.addEventListener('click', async function(){
+  if(!f.files||!f.files[0]){ m.textContent='Оберіть файл'; m.className='rc-msg err'; return; }
+  if(f.files[0].size>10*1024*1024){ m.textContent='Файл завеликий (до 10 МБ)'; m.className='rc-msg err'; return; }
+  b.disabled=true; m.textContent='Надсилаємо…'; m.className='rc-msg';
+  var fd=new FormData(); fd.append('code',CODE); fd.append('file',f.files[0]);
+  try{ var r=await fetch('/api/receipt',{method:'POST',body:fd}); var d={}; try{d=await r.json();}catch(e){}
+    if(r.ok&&d.ok){ m.textContent='Квитанцію надіслано \u2713 Дякуємо!'; m.className='rc-msg ok'; f.value=''; }
+    else { m.textContent=(d&&d.error)?d.error:'Не вдалося надіслати.'; m.className='rc-msg err'; }
+  } catch(e){ m.textContent='Помилка зʼєднання.'; m.className='rc-msg err'; }
+  finally { b.disabled=false; }
+});
 `;
 
 function pageHtml(inner, title) {
@@ -105,6 +141,22 @@ export async function onRequestGet(context) {
   let tot = total > 0 ? money(total) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
 
+  const link = origin + "/z/" + (rec.code || code);
+  const shareTxt = "Памʼятка для оплати треб (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
+  const shareBlock =
+    '<div class="share"><div class="share-t">Надіслати памʼятку собі</div><div class="share-row">' +
+    '<a class="sh" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareTxt) + '">Telegram</a>' +
+    '<a class="sh" href="viber://forward?text=' + encodeURIComponent(shareTxt + " " + link) + '">Viber</a>' +
+    '<a class="sh" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(shareTxt + " " + link) + '">WhatsApp</a>' +
+    '<a class="sh" href="mailto:?subject=' + encodeURIComponent("Памʼятка для оплати — " + (rec.code || code)) + '&body=' + encodeURIComponent(shareTxt + "\n" + link) + '">Пошта</a>' +
+    '<button class="sh" id="cpLink">Копіювати</button></div></div>';
+  const receiptBlock =
+    '<div class="rc"><div class="rc-t">Надіслати квитанцію про оплату</div>' +
+    '<p class="rc-p">Прикріпіть скрін або фото квитанції (за бажанням).</p>' +
+    '<input type="file" id="rcFile" accept="image/*,application/pdf">' +
+    '<button class="btn2" id="rcSend">Надіслати квитанцію</button>' +
+    '<div class="rc-msg" id="rcMsg"></div></div>';
+
   const inner =
     '<div class="wrap"><div class="card">' +
     '<div class="brand">Свято-Богоявленський<br>Кременецький монастир</div>' +
@@ -113,8 +165,11 @@ export async function onRequestGet(context) {
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +
     sheets +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
+    '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     reqBlock +
     '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Памʼятка дійсна 7 днів від подання записки.</p>' +
-    '<a class="btn" href="' + origin + '/">Подати ще одну записку</a></div></div>';
+    shareBlock + receiptBlock +
+    '<a class="btn" href="' + origin + '/">Подати ще одну записку</a></div></div>' +
+    '<script>' + SCRIPT.replace('__CODE__', JSON.stringify(rec.code || code)) + '<\/script>';
   return html(pageHtml(inner, "Памʼятка " + (rec.code || code)));
 }

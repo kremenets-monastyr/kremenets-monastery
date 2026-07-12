@@ -198,8 +198,46 @@ function buildPayload(){
 function toast(t){var e=document.getElementById('toast');if(!e)return;e.textContent=t;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},4500);}
 function resetAll(){sheets=[];uid=0;render();['phone','uname'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
 function copyTxt(t,el){try{navigator.clipboard.writeText(t).then(function(){var o=el.getAttribute('data-lbl')||el.textContent;el.setAttribute('data-lbl',o);el.textContent='Скопійовано \u2713';setTimeout(function(){el.textContent=o;},1500);});}catch(e){}}
+function krShareRow(code,link){
+  var t='Памʼятка для оплати треб (Свято-Богоявленський Кременецький монастир). Номер: '+code+'.';
+  var u=encodeURIComponent(link),te=encodeURIComponent(t),tu=encodeURIComponent(t+' '+link);
+  var tg='https://t.me/share/url?url='+u+'&text='+te;
+  var wa='https://wa.me/?text='+tu;
+  var vb='viber://forward?text='+tu;
+  var em='mailto:?subject='+encodeURIComponent('Памʼятка для оплати \u2014 '+code)+'&body='+encodeURIComponent(t+'\n'+link);
+  var nb=(navigator.share)?'<button class="sh-b sh-native" data-share="1">Поділитися\u2026</button>':'';
+  return '<div class="cf-share"><div class="cf-share-t">Надіслати памʼятку собі</div><div class="cf-share-row">'
+    +'<a class="sh-b sh-tg" href="'+tg+'" target="_blank" rel="noopener">Telegram</a>'
+    +'<a class="sh-b sh-vb" href="'+vb+'">Viber</a>'
+    +'<a class="sh-b sh-wa" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>'
+    +'<a class="sh-b sh-em" href="'+em+'">Пошта</a>'
+    +'<button class="sh-b sh-cp" data-copy="'+link+'">Копіювати</button>'+nb+'</div></div>';
+}
+function krReceiptBlock(){
+  return '<div class="cf-rc"><div class="cf-rc-t">Надіслати квитанцію про оплату</div>'
+    +'<p class="cf-rc-p">Прикріпіть скрін або фото квитанції (за бажанням).</p>'
+    +'<div class="cf-rc-row"><input type="file" id="rcFile" accept="image/*,application/pdf"><button class="cta2" id="rcSend">Надіслати квитанцію</button></div>'
+    +'<div class="cf-rc-msg" id="rcMsg"></div></div>';
+}
+function krWire(root,code,link){
+  root.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){copyTxt(b.getAttribute('data-copy'),b);});});
+  var nb=root.querySelector('[data-share]');
+  if(nb&&navigator.share){nb.addEventListener('click',function(){navigator.share({title:'Памʼятка',text:'Памʼятка для оплати треб. Номер: '+code,url:link}).catch(function(){});});}
+  var f=root.querySelector('#rcFile'),b=root.querySelector('#rcSend'),m=root.querySelector('#rcMsg');
+  if(b){b.addEventListener('click',async function(){
+    if(!f.files||!f.files[0]){m.textContent='Оберіть файл';m.className='cf-rc-msg err';return;}
+    if(f.files[0].size>10*1024*1024){m.textContent='Файл завеликий (до 10 МБ)';m.className='cf-rc-msg err';return;}
+    b.disabled=true;m.textContent='Надсилаємо\u2026';m.className='cf-rc-msg';
+    var fd=new FormData();fd.append('code',code);fd.append('file',f.files[0]);
+    try{var r=await fetch('/api/receipt',{method:'POST',body:fd});var d={};try{d=await r.json();}catch(e){}
+      if(r.ok&&d.ok){m.textContent='Квитанцію надіслано \u2713 Дякуємо!';m.className='cf-rc-msg ok';f.value='';}
+      else{m.textContent=(d&&d.error)?d.error:'Не вдалося надіслати. Спробуйте ще раз.';m.className='cf-rc-msg err';}
+    }catch(e){m.textContent='Помилка зʼєднання.';m.className='cf-rc-msg err';}finally{b.disabled=false;}
+  });}
+}
 function showConfirm(code){
   var co=document.getElementById('checkout'), sh=document.getElementById('sheets'); if(sh)sh.innerHTML='';
+  try{localStorage.setItem('kr_last',JSON.stringify({code:code,ts:Date.now()}));}catch(e){}
   co.style.display='block';
   var link=location.origin+'/z/'+code;
   co.innerHTML='<div class="confirm">'
@@ -208,19 +246,18 @@ function showConfirm(code){
     +'<div class="cf-code">Ваш номер запису<br><b>'+code+'</b></div>'
     +'<button class="cta2 cf-copy" data-copy="'+code+'">Скопіювати номер</button>'
     +'<div class="cf-req"><div class="cf-req-t">Реквізити для пожертви</div><div class="cf-req-b" id="cfReqBody">Завантаження\u2026</div></div>'
-    +'<p class="cf-note">У коментарі до платежу вкажіть <b>номер</b> або ваше <b>ім\u2019я та телефон</b>. Оплатити можна будь-коли протягом 7 днів.</p>'
+    +'<p class="cf-note"><b>Оплата треб \u2014 це добровільна пожертва на монастир.</b> У коментарі до платежу вкажіть номер (або ваше ім\u2019я та телефон). Оплатити можна будь-коли протягом 7 днів.</p>'
+    +krShareRow(code,link)
+    +krReceiptBlock()
     +'<div class="cf-keep">Сторінка для оплати (збережіть посилання):<br><a href="'+link+'" target="_blank" rel="noopener">'+link+'</a></div>'
     +'<button class="cta" onclick="location.reload()">Подати ще одну записку</button>'
     +'</div>';
-  co.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){copyTxt(b.getAttribute('data-copy'),b);});});
+  krWire(co,code,link);
   fetch('/api/requisites').then(function(r){return r.json();}).then(function(d){
     var body=document.getElementById('cfReqBody'); if(!body)return;
-    if(d&&d.ok&&d.text){
-      var safe=d.text.replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';});
-      body.innerHTML='<pre class="cf-req-pre">'+safe+'</pre><button class="cta2 cf-copy" id="cfReqCopy">Скопіювати реквізити</button>';
-      var rc=document.getElementById('cfReqCopy'); rc.addEventListener('click',function(){copyTxt(d.text,rc);});
-    } else { body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель — зверніться до контактів і назвіть номер запису.</span>'; }
-  }).catch(function(){var body=document.getElementById('cfReqBody'); if(body)body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель — зверніться до контактів.</span>';});
+    if(d&&d.ok&&d.text){var safe=d.text.replace(/[<>&]/g,function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';});body.innerHTML='<pre class="cf-req-pre">'+safe+'</pre><button class="cta2 cf-copy" id="cfReqCopy">Скопіювати реквізити</button>';var rc=document.getElementById('cfReqCopy');rc.addEventListener('click',function(){copyTxt(d.text,rc);});}
+    else{body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель \u2014 зверніться до контактів і назвіть номер запису.</span>';}
+  }).catch(function(){var body=document.getElementById('cfReqBody'); if(body)body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель \u2014 зверніться до контактів.</span>';});
 }
 async function sendOrder(){
   var name=(document.getElementById('uname')||{value:''}).value.trim(),phone=document.getElementById('phone').value.trim(),box=document.getElementById('formmsg'),btn=document.querySelector('.send');
@@ -236,3 +273,25 @@ async function sendOrder(){
   }catch(e){box.textContent='Помилка зʼєднання. Перевірте інтернет і спробуйте ще раз.';box.className='formmsg err';}
   finally{if(btn)btn.disabled=false;}
 }
+
+/* «Залишена памʼятка» — банер для повернення до оплати */
+function showReturnBanner(code){
+  if(document.getElementById('krBanner'))return;
+  var link=location.origin+'/z/'+code;
+  var el=document.createElement('div'); el.id='krBanner'; el.className='kr-banner';
+  el.innerHTML='<div class="kr-b-ic">\ud83d\udd6f\ufe0f</div>'
+    +'<div class="kr-b-tx"><b>Незавершена памʼятка</b><span>\u2116'+code+' \u2014 переглянути й оплатити</span></div>'
+    +'<a class="kr-b-go" href="'+link+'">Переглянути</a>'
+    +'<button class="kr-b-x" aria-label="Сховати">\u00d7</button>';
+  document.body.appendChild(el);
+  el.querySelector('.kr-b-x').addEventListener('click',function(){el.remove();try{sessionStorage.setItem('kr_hide','1');}catch(e){}});
+}
+(function(){
+  try{
+    if(sessionStorage.getItem('kr_hide'))return;
+    var raw=localStorage.getItem('kr_last'); if(!raw)return;
+    var o=JSON.parse(raw); if(!o||!o.code)return;
+    if(Date.now()-(o.ts||0) > 7*24*3600*1000){localStorage.removeItem('kr_last');return;}
+    setTimeout(function(){showReturnBanner(o.code);},700);
+  }catch(e){}
+})();
