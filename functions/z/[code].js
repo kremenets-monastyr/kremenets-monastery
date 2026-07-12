@@ -59,6 +59,35 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .two .share{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;justify-content:center}
 @media(max-width:600px){.two{grid-template-columns:1fr}}
 .rc.done{border-style:solid;border-color:var(--blue);background:#E4EBF7}
+@media(max-width:600px){
+  body{padding:14px 10px}
+  .card{padding:18px 16px;border-radius:14px}
+  .brand{font-size:15px;margin-bottom:4px}
+  h1{font-size:22px;margin-bottom:10px}
+  .code{font-size:13px}.code b{font-size:22px}
+  .meta{font-size:12px;margin-bottom:12px}
+  .total{font-size:15px;margin:0 2px 12px}.total b{font-size:20px}
+  .donate{padding:9px 12px;font-size:13px;margin-bottom:12px}
+  .two{gap:10px;margin-bottom:12px}
+  .req{padding:12px 14px;margin-bottom:0}
+  .req-t{margin-bottom:6px}
+  .req pre{font-size:14px;margin-bottom:10px}
+  .share{padding:12px 14px}
+  .share-t{margin-bottom:8px}
+  .note{font-size:12px;margin-bottom:12px}
+  .rc{padding:12px 14px;margin-bottom:12px}
+  .rc-p{margin-bottom:8px}
+}
+.acc{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:18px;overflow:hidden}
+.acc-h{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;font-weight:600;color:var(--blue);font-size:15px;transition:.15s}
+.acc-h::-webkit-details-marker{display:none}
+.acc-h:hover{background:var(--bg)}
+.acc-m{margin-left:auto;font-weight:400;font-size:13px;color:var(--muted)}
+.acc-x{width:10px;height:10px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:rotate(45deg);transition:transform .2s;flex:none;margin-top:-4px}
+.acc[open] .acc-x{transform:rotate(-135deg);margin-top:2px}
+.acc-b{padding:4px 14px 14px;border-top:1px solid var(--line)}
+.acc-b .sheet:last-child{margin-bottom:0}
+.total{margin:2px 2px 16px}
 `;
 
 const SCRIPT = `
@@ -145,6 +174,16 @@ export async function onRequestGet(context) {
   }).join("");
   let tot = total > 0 ? money(total) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
+  const nSheets = (rec.sheets || []).length;
+  const nNames = (rec.sheets || []).reduce(function (a, s) { return a + ((s.names || []).length); }, 0);
+  const plural = function (n, one, few, many) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+    return many;
+  };
+  const wordSheets = plural(nSheets, "записка", "записки", "записок");
+  const wordNames = plural(nNames, "імʼя", "імені", "імен");
 
   const link = origin + "/z/" + (rec.code || code);
   const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
@@ -168,12 +207,15 @@ export async function onRequestGet(context) {
     '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +
-    sheets +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + shareBlock + '</div>' +
     '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Сторінка доступна 7 днів від подання записки.</p>' +
     receiptBlock +
+    '<details class="acc"><summary class="acc-h"><span>Переглянути записки</span>' +
+      '<span class="acc-m">' + nSheets + ' ' + wordSheets + ' · ' + nNames + ' ' + wordNames + '</span>' +
+      '<span class="acc-x" aria-hidden="true"></span></summary>' +
+      '<div class="acc-b">' + sheets + '</div></details>' +
     '<a class="btn" href="' + origin + '/">Подати ще одну записку</a></div></div>' +
     '<script>' + SCRIPT.replace('__CODE__', JSON.stringify(rec.code || code)) + '<\/script>';
   return html(pageHtml(inner, "Ваші записки " + (rec.code || code)));
