@@ -410,3 +410,27 @@ html,body{overflow-x:hidden}
 .rules-box .rules-link{font-size:13px;color:var(--muted);margin-bottom:0}
 .rules-box .rules-link a{color:var(--gold);text-decoration:underline}
 @media(max-width:560px){.rules-box{padding:20px 18px}}
+
+
+/* Сторінка «Як подавати записки» */
+.pravyla-hero{padding:var(--sp-8) 0 var(--sp-6);text-align:center;background:var(--bg-soft);border-bottom:1px solid var(--line)}
+.pravyla-hero .cr{width:40px;height:40px;margin:0 auto 12px;color:var(--gold)}
+.pravyla-hero .lead{max-width:62ch;margin:14px auto 0;color:var(--muted);font-size:16px;line-height:1.65}
+.pr{padding:var(--sp-8) 0}
+.pr-wrap{max-width:780px}
+.pr-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 30px;margin-bottom:18px}
+.pr-card h2{font-size:26px;margin-bottom:14px}
+.pr-card p{font-size:15px;line-height:1.7;color:var(--ink);margin-bottom:12px}
+.pr-card p:last-child{margin-bottom:0}
+.pr-soft{background:var(--bg-soft);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+.pr-def{padding:14px 0;border-bottom:1px solid var(--line)}
+.pr-def:last-child{border-bottom:none;padding-bottom:0}
+.pr-def h3{font-size:20px;margin-bottom:6px;color:var(--blue)}
+.pr-def p{margin-bottom:0;font-size:15px}
+.pr-list{list-style:none;margin-bottom:14px}
+.pr-list li{position:relative;padding-left:22px;font-size:15px;line-height:1.7;margin-bottom:8px;color:var(--ink)}
+.pr-list li::before{content:'';position:absolute;left:4px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.pr-note{background:var(--bg-soft);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--muted)}
+.pr-cta{text-align:center;margin:26px 0 18px}
+.pr-src{text-align:center;font-size:13px;color:var(--ink-faint);line-height:1.6;max-width:60ch;margin:0 auto}
+@media(max-width:600px){.pr-card{padding:20px 18px}.pr-card h2{font-size:22px}}

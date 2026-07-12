@@ -43,20 +43,26 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .btn2:active{transform:none}
 .donate{background:#EEF3FB;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--ink);text-align:center;margin-bottom:16px}
 .donate b{color:var(--blue)}
-.share{margin-bottom:18px}
-.share-t{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:center;margin-bottom:10px}
-.share-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.sh{font-size:12px;font-weight:600;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);color:var(--blue);background:#fff;text-decoration:none;cursor:pointer;transition:.15s}
-.sh:hover{border-color:var(--blue);background:#E4EBF7;transform:translateY(-1px)}
+.share{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.share-t{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.share-row{display:flex;gap:8px}
+.shi{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--blue);cursor:pointer;transition:.15s;padding:0}
+.shi svg{width:20px;height:20px;display:block}
+.shi:hover{transform:translateY(-2px);border-color:var(--blue);background:#E4EBF7}
+.shi.tg:hover{color:#2AABEE;border-color:#2AABEE}
+.shi.vb:hover{color:#7360F2;border-color:#7360F2}
+.shi.wa:hover{color:#25D366;border-color:#25D366}
+.shi.copied{color:#fff;background:var(--blue);border-color:var(--blue)}
 .rc{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:16px 18px;text-align:center;margin-bottom:18px}
 .rc-t{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:4px}
 .rc-p{font-size:13px;color:var(--muted);margin-bottom:12px}
 .rc input[type=file]{font-size:13px;max-width:100%;margin-bottom:10px}
 .rc-msg{font-size:13px;min-height:16px;margin-top:8px}
 .rc-msg.ok{color:var(--blue)}.rc-msg.err{color:var(--red)}
-.two{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-bottom:16px;align-items:start}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch}
 .two>*{min-width:0;margin-bottom:0}
-.two .share{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;justify-content:center}
+.two .rc{margin-bottom:0;display:flex;flex-direction:column;justify-content:center}
+.two .req{margin-bottom:0}
 @media(max-width:600px){.two{grid-template-columns:1fr}}
 .rc.done{border-style:solid;border-color:var(--blue);background:#E4EBF7}
 @media(max-width:600px){
@@ -93,7 +99,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 const SCRIPT = `
 var CODE = __CODE__, LINK = location.origin + '/z/' + CODE;
 var cp = document.getElementById('cpLink');
-if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(LINK); var o=cp.textContent; cp.textContent='Скопійовано \u2713'; setTimeout(function(){cp.textContent=o;},1500); });
+if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(LINK); cp.classList.add('copied'); setTimeout(function(){cp.classList.remove('copied');},1400); });
 var rq = document.querySelector('.req .btn2');
 if (rq) rq.addEventListener('click', function(){ var o=rq.textContent; rq.textContent='Скопійовано \u2713'; setTimeout(function(){rq.textContent=o;},1500); });
 var f=document.getElementById('rcFile'), b=document.getElementById('rcSend'), m=document.getElementById('rcMsg');
@@ -187,13 +193,21 @@ export async function onRequestGet(context) {
 
   const link = origin + "/z/" + (rec.code || code);
   const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
+  const I = {
+    tg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.9 19c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.9 12.9 2.3 11.5c-1-.3-1-1 .2-1.5l18.1-7c.8-.3 1.5.2 1.3 1.3z"/></svg>',
+    vb: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.2 4 9.2c0 2.2 1.1 4.2 2.9 5.5v3.8c0 .5.6.8 1 .5l2.6-2c.5.1 1 .1 1.5.1 4.4 0 8-3.2 8-7.2S16.4 2 12 2zm4.6 9.6c-.2.5-.9.9-1.4 1-.4.1-.9.1-1.4-.1-.3-.1-.8-.3-1.4-.5-2.4-1-4-3.4-4.1-3.6-.1-.2-1-1.3-1-2.4s.6-1.7.8-1.9c.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.7 1.6c.1.1.1.3 0 .4l-.2.3-.3.3c-.1.1-.2.2-.1.4.1.2.5.9 1.1 1.4.8.7 1.4.9 1.6 1 .2.1.3.1.4-.1l.6-.7c.1-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.2.1.6 0 .9z"/></svg>',
+    wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.5-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.1-.3 0-.5l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.1s.9 2.5 1 2.6c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.1-.4-.2z"/></svg>',
+    em: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 6.5L21 6"/></svg>',
+    cp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
+  };
   const shareBlock =
-    '<div class="share"><div class="share-t">Надіслати собі посилання</div><div class="share-row">' +
-    '<a class="sh" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareTxt) + '">Telegram</a>' +
-    '<a class="sh" href="viber://forward?text=' + encodeURIComponent(shareTxt + " " + link) + '">Viber</a>' +
-    '<a class="sh" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(shareTxt + " " + link) + '">WhatsApp</a>' +
-    '<a class="sh" href="mailto:?subject=' + encodeURIComponent("Ваші записки — " + (rec.code || code)) + '&body=' + encodeURIComponent(shareTxt + "\n" + link) + '">Пошта</a>' +
-    '<button class="sh" id="cpLink">Копіювати</button></div></div>';
+    '<div class="share"><div class="share-t">Надіслати собі</div><div class="share-row">' +
+    '<a class="shi tg" title="Telegram" aria-label="Telegram" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareTxt) + '">' + I.tg + '</a>' +
+    '<a class="shi vb" title="Viber" aria-label="Viber" href="viber://forward?text=' + encodeURIComponent(shareTxt + " " + link) + '">' + I.vb + '</a>' +
+    '<a class="shi wa" title="WhatsApp" aria-label="WhatsApp" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(shareTxt + " " + link) + '">' + I.wa + '</a>' +
+    '<a class="shi em" title="Пошта" aria-label="Пошта" href="mailto:?subject=' + encodeURIComponent("Ваші записки — " + (rec.code || code)) + '&body=' + encodeURIComponent(shareTxt + "\n" + link) + '">' + I.em + '</a>' +
+    '<button class="shi cp" id="cpLink" title="Копіювати посилання" aria-label="Копіювати посилання">' + I.cp + '</button>' +
+    '</div></div>';
   const receiptBlock =
     '<div class="rc"><div class="rc-t">Надіслати квитанцію про оплату</div>' +
     '<p class="rc-p">Прикріпіть скрін або фото квитанції (за бажанням).</p>' +
@@ -209,9 +223,9 @@ export async function onRequestGet(context) {
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
-    '<div class="two">' + reqBlock + shareBlock + '</div>' +
+    '<div class="two">' + reqBlock + receiptBlock + '</div>' +
+    shareBlock +
     '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Сторінка доступна 7 днів від подання записки.</p>' +
-    receiptBlock +
     '<details class="acc"><summary class="acc-h"><span>Переглянути записки</span>' +
       '<span class="acc-m">' + nSheets + ' ' + wordSheets + ' · ' + nNames + ' ' + wordNames + '</span>' +
       '<span class="acc-x" aria-hidden="true"></span></summary>' +
