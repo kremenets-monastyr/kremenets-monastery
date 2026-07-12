@@ -266,16 +266,46 @@ function showConfirm(code){
     else{body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель \u2014 зверніться до контактів і назвіть номер запису.</span>';}
   }).catch(function(){var body=document.getElementById('cfReqBody'); if(body)body.innerHTML='<span class="cf-req-fallback">Реквізити надасть обитель \u2014 зверніться до контактів.</span>';});
 }
+/* Церковна памʼятка «за кого подають» — показується перед відправкою */
+var KR_RULES_HTML =
+  '<div class="krm-b">'
+  +'<p>Церковна записка — це прохання до спільної молитви Церкви, тож у ній подають імена <b>православних християн</b> (хрещених у Православній Церкві).</p>'
+  +'<p><b>На проскомідію</b> (з вийняттям часточок) за традицією подають за тих, хто веде церковне життя — сповідається і приступає до Святого Причастя.</p>'
+  +'<p>За церковними канонами в храмі <b>не поминають</b> нехрещених, іновірців, а також тих, хто свідомо позбавив себе життя. Це не осуд людини, а устав Церкви. За таких близьких можна щиро молитися <b>вдома, келійно</b>, творити милостиню; у складних випадках варто порадитися зі священником обителі.</p>'
+  +'<p class="krm-n">Імена пишіть у родовому відмінку, повністю (Іоанна, Марії). За потреби додайте примітку: болящого, воїна, подорожуючого, новопреставленого.</p>'
+  +'<p class="krm-l">Докладніше — у вченні Церкви про поминання: <a href="https://azbyka.ru/zapiska-v-hrame" target="_blank" rel="noopener">про церковні записки</a>.</p>'
+  +'</div>';
+function krRulesModal(onOk){
+  var w=document.createElement('div'); w.className='krm'; w.id='krmodal';
+  w.innerHTML='<div class="krm-c" role="dialog" aria-modal="true" aria-label="Памʼятка">'
+    +'<div class="krm-h">Памʼятка про поминання</div>'
+    +KR_RULES_HTML
+    +'<div class="krm-f"><button class="cta2" id="krmNo">Повернутися</button><button class="cta" id="krmYes">Розумію, подати</button></div>'
+    +'</div>';
+  document.body.appendChild(w);
+  function close(){w.remove();}
+  w.addEventListener('click',function(e){if(e.target===w)close();});
+  document.getElementById('krmNo').addEventListener('click',close);
+  document.getElementById('krmYes').addEventListener('click',function(){close();onOk();});
+}
 async function sendOrder(){
   var name=(document.getElementById('uname')||{value:''}).value.trim(),phone=document.getElementById('phone').value.trim(),box=document.getElementById('formmsg'),btn=document.querySelector('.send');
   if(!sheets.some(function(s){return s.treba!=null&&s.names.some(function(n){return n.trim();});})){box.textContent='Заповніть хоча б одну записку';box.className='formmsg err';return;}
   if(!name){box.textContent='Вкажіть ваше ім’я';box.className='formmsg err';return;}
   if(!phone){box.textContent='Вкажіть контактний номер телефону';box.className='formmsg err';return;}
+  krRulesModal(function(){ krDoSend(name,phone,box,btn); });
+}
+async function krDoSend(name,phone,box,btn){
   box.textContent='Надсилаємо…';box.className='formmsg';if(btn)btn.disabled=true;
   try{
     var r=await fetch('/api/send-treba',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(buildPayload())});
     var d={};try{d=await r.json();}catch(e){}
-    if(r.ok&&d.ok){toast('Записку прийнято ✓');sheets=[];uid=0;showConfirm(d.code);}
+    if(r.ok&&d.ok){
+      try{localStorage.setItem('kr_last',JSON.stringify({code:d.code,ts:Date.now()}));}catch(e){}
+      sheets=[];uid=0;
+      location.href='/z/'+d.code;
+      return;
+    }
     else{box.textContent=(d&&d.error)?d.error:'Не вдалося надіслати. Спробуйте ще раз або зателефонуйте до обителі.';box.className='formmsg err';}
   }catch(e){box.textContent='Помилка зʼєднання. Перевірте інтернет і спробуйте ще раз.';box.className='formmsg err';}
   finally{if(btn)btn.disabled=false;}

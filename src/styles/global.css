@@ -50,6 +50,15 @@
   --sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;--sp-8:64px;
   --r-md:12px;--r-lg:18px;--r-pill:999px;
 }
+html{font-size:16px}
+html[data-zoom="2"]{font-size:18px}
+html[data-zoom="3"]{font-size:20px}
+html[data-zoom="2"] body{font-size:17px}
+html[data-zoom="3"] body{font-size:19px}
+html[data-zoom="2"] .nrow input,html[data-zoom="2"] .field input,html[data-zoom="2"] .treba select{font-size:17px}
+html[data-zoom="3"] .nrow input,html[data-zoom="3"] .field input,html[data-zoom="3"] .treba select{font-size:19px}
+html[data-zoom="2"] .tc-title,html[data-zoom="2"] .info p,html[data-zoom="2"] .sec-head p{font-size:1.06em}
+html[data-zoom="3"] .tc-title,html[data-zoom="3"] .info p,html[data-zoom="3"] .sec-head p{font-size:1.14em}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:var(--ui);color:var(--ink);background:var(--cream);line-height:1.7;-webkit-font-smoothing:antialiased}
@@ -356,3 +365,34 @@ html,body{overflow-x:hidden}
 .confirm .cf-rc{max-width:720px}
 .confirm .cf-rc.done{border-style:solid;border-color:var(--blue);background:var(--blue-tint)}
 .confirm .cf-rc.done .cf-rc-t{color:var(--blue)}
+
+
+/* Памʼятка про поминання (модальне вікно) */
+.krm{position:fixed;inset:0;z-index:200;background:rgba(22,35,76,.55);display:flex;align-items:center;justify-content:center;padding:18px;animation:krfade .2s ease both}
+@keyframes krfade{from{opacity:0}to{opacity:1}}
+.krm-c{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 26px 20px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
+.krm-h{font-family:var(--mono);font-weight:400;font-size:26px;color:var(--blue);text-align:center;margin-bottom:16px;font-synthesis:none}
+.krm-b p{font-size:15px;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.krm-b .krm-n{font-size:14px;color:var(--muted);background:var(--bg-soft);border-radius:10px;padding:12px 14px}
+.krm-b .krm-l{font-size:13px;color:var(--muted)}
+.krm-b .krm-l a{color:var(--gold);text-decoration:underline}
+.krm-f{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.krm-f .cta,.krm-f .cta2{flex:1;min-width:160px}
+
+/* Перемикач масштабу */
+.kr-zoom{display:inline-flex;align-items:center;gap:4px;margin-left:12px}
+.kr-zoom button{border:1.5px solid var(--line);background:#fff;color:var(--blue);border-radius:8px;cursor:pointer;font-family:var(--ui);font-weight:700;line-height:1;padding:5px 8px;transition:.15s}
+.kr-zoom button:hover{border-color:var(--blue);background:var(--blue-tint)}
+.kr-zoom button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.kr-zoom .z1{font-size:12px}.kr-zoom .z2{font-size:14px}.kr-zoom .z3{font-size:17px}
+@media(max-width:900px){.kr-zoom{margin-left:0}}
+
+
+/* Розділ «За кого подають записки» */
+.rules{padding:var(--sp-8) 0;background:var(--bg-soft);border-top:1px solid var(--line)}
+.rules-box{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:14px;padding:26px 28px}
+.rules-box p{font-size:15px;line-height:1.65;color:var(--ink);margin-bottom:12px}
+.rules-box .rules-note{background:var(--bg-soft);border-radius:10px;padding:12px 14px;color:var(--muted);font-size:14px}
+.rules-box .rules-link{font-size:13px;color:var(--muted);margin-bottom:0}
+.rules-box .rules-link a{color:var(--gold);text-decoration:underline}
+@media(max-width:560px){.rules-box{padding:20px 18px}}
