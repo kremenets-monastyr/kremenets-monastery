@@ -12,12 +12,15 @@ const multi = ready.length > 1;
     <nav class="xnav">
       {ready.map((n) => <a href={n.href} class={isOn(n.href) ? 'on' : ''}>{n.label}</a>)}
       <span class="xlangs">UK · EN</span>
-      <span class="kr-zoom" id="krZoom" aria-label="Розмір тексту">
-        <button class="z1" data-z="1" title="Звичайний">A</button>
-        <button class="z2" data-z="2" title="Більший">A</button>
-        <button class="z3" data-z="3" title="Найбільший">A</button>
-      </span>
     </nav>
+      <span class="kr-zoom" id="krZoom" role="group" aria-label="Розмір тексту">
+        <span class="kz-lbl">Розмір тексту</span>
+        <span class="kz-btns">
+          <button class="z1" data-z="1" title="Звичайний" aria-label="Звичайний розмір">A</button>
+          <button class="z2" data-z="2" title="Більший" aria-label="Більший розмір">A</button>
+          <button class="z3" data-z="3" title="Найбільший" aria-label="Найбільший розмір">A</button>
+        </span>
+      </span>
     {multi && (
       <button class="xburger" aria-label="Меню" onclick="document.getElementById('xmnav').classList.toggle('open')"><span></span><span></span><span></span></button>
     )}

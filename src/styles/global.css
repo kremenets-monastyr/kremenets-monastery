@@ -1,6 +1,13 @@
 /* Шапка/футер */
 /* Автономні хедер і футер — правити тут, застосовується на всіх сторінках */
-.xhead{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.xhead{position:fixed;top:0;left:0;right:0;z-index:80;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);transition:transform .28s ease,box-shadow .2s}
+body{padding-top:72px}
+.xhead.scrolled{box-shadow:0 6px 24px rgba(34,53,111,.08)}
+@media(max-width:900px){
+  body{padding-top:64px}
+  .xhead .xbar{height:64px}
+  .xhead.hide{transform:translateY(-100%)}
+}
 .xhead .xbar{max-width:1160px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:72px;gap:14px}
 .xhead .xbrand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .xhead .xlogo{height:50px;width:auto;border-radius:6px;display:block}
@@ -14,6 +21,7 @@
 .xmnav{display:none}
 @media(max-width:900px){
   .xhead .xnav{display:none}
+  .xhead .xbar > .kr-zoom{display:inline-flex}
   .xhead .xburger{display:flex}
   .xmnav{display:block;background:#fff;border-bottom:1px solid var(--line);overflow:hidden;max-height:0;transition:max-height .3s}
   .xmnav.open{max-height:560px}
@@ -380,12 +388,18 @@ html,body{overflow-x:hidden}
 .krm-f .cta,.krm-f .cta2{flex:1;min-width:160px}
 
 /* Перемикач масштабу */
-.kr-zoom{display:inline-flex;align-items:center;gap:4px;margin-left:12px}
-.kr-zoom button{border:1.5px solid var(--line);background:#fff;color:var(--blue);border-radius:8px;cursor:pointer;font-family:var(--ui);font-weight:700;line-height:1;padding:5px 8px;transition:.15s}
+.kr-zoom{display:inline-flex;align-items:center;gap:8px;margin-left:14px;padding-left:14px;border-left:1px solid var(--line)}
+.kz-lbl{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.kz-btns{display:inline-flex;gap:4px}
+.kr-zoom button{border:1.5px solid var(--line);background:#fff;color:var(--blue);border-radius:8px;cursor:pointer;font-family:var(--ui);font-weight:700;line-height:1;padding:5px 9px;transition:.15s;position:relative}
 .kr-zoom button:hover{border-color:var(--blue);background:var(--blue-tint)}
-.kr-zoom button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.kr-zoom button.on{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(34,53,111,.25)}
+.kr-zoom button.on::after{content:'';position:absolute;left:20%;right:20%;bottom:-6px;height:2px;border-radius:2px;background:var(--blue)}
 .kr-zoom .z1{font-size:12px}.kr-zoom .z2{font-size:14px}.kr-zoom .z3{font-size:17px}
-@media(max-width:900px){.kr-zoom{margin-left:0}}
+@media(max-width:900px){
+  .kr-zoom{margin-left:auto;padding-left:0;border-left:none;margin-right:8px}
+  .kz-lbl{display:none}
+}
 
 
 /* Розділ «За кого подають записки» */
