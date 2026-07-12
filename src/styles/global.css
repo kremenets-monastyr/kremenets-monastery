@@ -308,7 +308,7 @@ html,body{overflow-x:hidden}
 
 /* Екран після оплати: реквізити, копіювання, памʼятка */
 .confirm .cf-copy{margin:0 auto 20px;display:inline-flex}
-.confirm .cf-req{max-width:440px;margin:0 auto 20px;text-align:left;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.confirm .cf-req{margin:0;text-align:left;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
 .confirm .cf-req-t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;text-align:center}
 .confirm .cf-req-pre{font-family:var(--ui);font-size:15px;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin:0 0 12px;line-height:1.55}
 .confirm .cf-req-fallback{font-size:14px;color:var(--muted)}
@@ -318,7 +318,7 @@ html,body{overflow-x:hidden}
 
 
 /* Кнопки поділитися */
-.confirm .cf-share{max-width:460px;margin:0 auto 18px}
+.confirm .cf-share{margin:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
 .cf-share-t{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px;text-align:center}
 .cf-share-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .sh-b{font-family:var(--ui);font-size:12px;font-weight:600;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);color:var(--blue);background:#fff;text-decoration:none;cursor:pointer;transition:.15s}
@@ -347,3 +347,12 @@ html,body{overflow-x:hidden}
 .kr-banner .kr-b-x{border:none;background:none;color:var(--ink-faint);font-size:20px;line-height:1;cursor:pointer;padding:2px 4px}
 .kr-banner .kr-b-x:hover{color:var(--red)}
 @media(max-width:600px){.kr-banner{top:auto;bottom:88px;left:8px;right:8px;max-width:none}}
+
+
+/* Реквізити + надіслати собі — один блок у дві колонки */
+.confirm .cf-two{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;max-width:720px;margin:0 auto 18px;text-align:left}
+.confirm .cf-two>*{min-width:0}
+@media(max-width:680px){.confirm .cf-two{grid-template-columns:1fr}}
+.confirm .cf-rc{max-width:720px}
+.confirm .cf-rc.done{border-style:solid;border-color:var(--blue);background:var(--blue-tint)}
+.confirm .cf-rc.done .cf-rc-t{color:var(--blue)}

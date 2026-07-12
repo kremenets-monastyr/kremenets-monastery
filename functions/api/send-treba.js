@@ -95,7 +95,7 @@ export async function onRequestPost(context) {
 
   const code = genCode();
   const origin = new URL(request.url).origin;
-  const text = buildMessage(d, code) + "\n\ud83d\udd17 Памʼятка: " + origin + "/z/" + code;
+  const text = buildMessage(d, code) + "\n\ud83d\udd17 Записки: " + origin + "/z/" + code;
 
   // 1) Доставка в Telegram — джерело правди. Без неї не підтверджуємо.
   let tgOk = false;

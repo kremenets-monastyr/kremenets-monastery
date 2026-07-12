@@ -1,5 +1,5 @@
 /**
- * GET /z/<номер>  — сторінка-памʼятка для оплати.
+ * GET /z/<номер>  — сторінка «Ваші записки» (перегляд і пожертва).
  * Читає запис із KV (RECORDS) за номером і показує його разом із поточними реквізитами
  * (із закріпленого повідомлення каналу). Дійсна 7 днів (TTL запису в KV).
  */
@@ -54,6 +54,11 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .rc input[type=file]{font-size:13px;max-width:100%;margin-bottom:10px}
 .rc-msg{font-size:13px;min-height:16px;margin-top:8px}
 .rc-msg.ok{color:var(--blue)}.rc-msg.err{color:var(--red)}
+.two{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-bottom:16px;align-items:start}
+.two>*{min-width:0;margin-bottom:0}
+.two .share{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
+.rc.done{border-style:solid;border-color:var(--blue);background:#E4EBF7}
 `;
 
 const SCRIPT = `
@@ -69,7 +74,7 @@ if (b) b.addEventListener('click', async function(){
   b.disabled=true; m.textContent='Надсилаємо…'; m.className='rc-msg';
   var fd=new FormData(); fd.append('code',CODE); fd.append('file',f.files[0]);
   try{ var r=await fetch('/api/receipt',{method:'POST',body:fd}); var d={}; try{d=await r.json();}catch(e){}
-    if(r.ok&&d.ok){ m.textContent='Квитанцію надіслано \u2713 Дякуємо!'; m.className='rc-msg ok'; f.value=''; }
+    if(r.ok&&d.ok){ var box=document.querySelector('.rc'); if(box){ box.classList.add('done'); box.innerHTML='<div class="rc-t">Квитанцію отримано \u2713</div><p class="rc-p">Дякуємо! Обитель звірить пожертву за номером '+CODE+'.</p>'; } try{ localStorage.removeItem('kr_last'); }catch(e){} }
     else { m.textContent=(d&&d.error)?d.error:'Не вдалося надіслати.'; m.className='rc-msg err'; }
   } catch(e){ m.textContent='Помилка зʼєднання.'; m.className='rc-msg err'; }
   finally { b.disabled=false; }
@@ -116,11 +121,11 @@ export async function onRequestGet(context) {
     const inner =
       '<div class="wrap"><div class="card">' +
       '<div class="brand">Свято-Богоявленський<br>Кременецький монастир</div>' +
-      '<h1>Памʼятку не знайдено</h1>' +
+      '<h1>Записки не знайдено</h1>' +
       '<p class="muted">Запис за номером <b>' + esc(code) + '</b> не знайдено. Можливо, минуло понад 7 днів або номер введено з помилкою.</p>' +
       '<div style="height:16px"></div>' + reqBlock +
       '<a class="btn" href="' + origin + '/">На головну</a></div></div>';
-    return html(pageHtml(inner, "Памʼятку не знайдено"), 404);
+    return html(pageHtml(inner, "Записки не знайдено"), 404);
   }
 
   const TYPE = { living: { t: "За здоровʼя", c: "liv" }, dead: { t: "За упокій", c: "" } };
@@ -142,13 +147,13 @@ export async function onRequestGet(context) {
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
 
   const link = origin + "/z/" + (rec.code || code);
-  const shareTxt = "Памʼятка для оплати треб (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
+  const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
   const shareBlock =
-    '<div class="share"><div class="share-t">Надіслати памʼятку собі</div><div class="share-row">' +
+    '<div class="share"><div class="share-t">Надіслати собі посилання</div><div class="share-row">' +
     '<a class="sh" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareTxt) + '">Telegram</a>' +
     '<a class="sh" href="viber://forward?text=' + encodeURIComponent(shareTxt + " " + link) + '">Viber</a>' +
     '<a class="sh" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(shareTxt + " " + link) + '">WhatsApp</a>' +
-    '<a class="sh" href="mailto:?subject=' + encodeURIComponent("Памʼятка для оплати — " + (rec.code || code)) + '&body=' + encodeURIComponent(shareTxt + "\n" + link) + '">Пошта</a>' +
+    '<a class="sh" href="mailto:?subject=' + encodeURIComponent("Ваші записки — " + (rec.code || code)) + '&body=' + encodeURIComponent(shareTxt + "\n" + link) + '">Пошта</a>' +
     '<button class="sh" id="cpLink">Копіювати</button></div></div>';
   const receiptBlock =
     '<div class="rc"><div class="rc-t">Надіслати квитанцію про оплату</div>' +
@@ -160,16 +165,16 @@ export async function onRequestGet(context) {
   const inner =
     '<div class="wrap"><div class="card">' +
     '<div class="brand">Свято-Богоявленський<br>Кременецький монастир</div>' +
-    '<h1>Памʼятка для оплати</h1>' +
+    '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +
     sheets +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
-    reqBlock +
-    '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Памʼятка дійсна 7 днів від подання записки.</p>' +
-    shareBlock + receiptBlock +
+    '<div class="two">' + reqBlock + shareBlock + '</div>' +
+    '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Сторінка доступна 7 днів від подання записки.</p>' +
+    receiptBlock +
     '<a class="btn" href="' + origin + '/">Подати ще одну записку</a></div></div>' +
     '<script>' + SCRIPT.replace('__CODE__', JSON.stringify(rec.code || code)) + '<\/script>';
-  return html(pageHtml(inner, "Памʼятка " + (rec.code || code)));
+  return html(pageHtml(inner, "Ваші записки " + (rec.code || code)));
 }
