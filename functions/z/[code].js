@@ -29,6 +29,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .sh-n{list-style:none;font-size:15px;margin-bottom:6px}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
+.sh-w{font-size:13px;color:var(--blue);background:var(--bg);border-radius:8px;padding:5px 8px;margin-bottom:6px;display:inline-block}
 .total{text-align:right;font-size:16px;margin:6px 2px 20px}
 .total b{font-family:'Monomakh',serif;font-size:22px;color:var(--blue)}
 .req{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
@@ -175,8 +176,9 @@ export async function onRequestGet(context) {
     else { total += Number(s.sum) || 0; sumTxt = money(s.sum); }
     const names = (s.names || []).map(function (n, i) { return "<li>" + (i + 1) + ". " + esc(n) + "</li>"; }).join("");
     const treba = (s.trebaGroup && s.trebaGroup !== s.trebaTitle ? esc(s.trebaGroup) + " · " : "") + esc(s.trebaTitle || "");
+    const when = s.when ? '<div class="sh-w">🗓 ' + esc(s.when) + '</div>' : '';
     return '<div class="sheet ' + ty.c + '"><div class="sh-h">' + ty.t + '</div><div class="sh-tr">' + treba +
-      '</div><ul class="sh-n">' + names + '</ul><div class="sh-s">Сума: <b>' + sumTxt + '</b></div></div>';
+      '</div>' + when + '<ul class="sh-n">' + names + '</ul><div class="sh-s">Сума: <b>' + sumTxt + '</b></div></div>';
   }).join("");
   let tot = total > 0 ? money(total) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";

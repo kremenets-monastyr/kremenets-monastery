@@ -78,15 +78,15 @@ const TREBY=[
  {n:4, grp:'Просте поминання', t:'6 місяців', s:'Поминання на Літургії', price:120,  unit:'name',     live:1, dead:1},
  {n:5, grp:'Просте поминання', t:'1 рік',     s:'Поминання на Літургії', price:240,  unit:'name',     live:1, dead:1},
  {n:6, grp:'Просте поминання', t:'5 років',   s:'Поминання на Літургії', price:1200, unit:'name',     live:1, dead:1},
- {n:7, grp:'Просте поминання', t:'За запискою', s:'На пожертву',         price:0,    unit:'donation', live:1, dead:1},
+ {n:7, grp:'Просте поминання', t:'За 1 записку', s:'На пожертву',        price:0,    unit:'donation', live:1, dead:1},
  {n:8, grp:'Неусипна псалтир', t:'1 місяць',  s:'На Неусипній Псалтирі', price:20,   unit:'name',     live:1, dead:1},
  {n:9, grp:'Неусипна псалтир', t:'6 місяців', s:'На Неусипній Псалтирі', price:120,  unit:'name',     live:1, dead:1},
  {n:10,grp:'Неусипна псалтир', t:'1 рік',     s:'На Неусипній Псалтирі', price:240,  unit:'name',     live:1, dead:1},
  {n:11,grp:'40 акафістів',     t:'Б. М. «Скорбяща»',          s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
  {n:12,grp:'40 акафістів',     t:'Свт. Миколаю Чудотворцю',   s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
  {n:13,grp:'40 акафістів',     t:'Вмч. Пантелеймону',         s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
- {n:14,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'40 акафістів', price:60, unit:'name', live:1, dead:0},
- {n:15,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'40 акафістів', price:60, unit:'name', live:1, dead:0},
+ {n:14,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
+ {n:15,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
  {n:16,grp:'40 акафістів',     t:'Подячний молебень',         s:'За одне ім\u2019я', price:2, unit:'name', live:1, dead:0},
  {n:17,grp:'Панахида',         t:'Панахида',                  s:'Заупокійне поминання — на пожертву', price:0, unit:'donation', live:0, dead:1},
 ];
@@ -101,10 +101,23 @@ function orderFromList(type,n){uid++;sheets.push({id:uid,type,treba:n,names:['']
 function goToSheet(id){const el=document.getElementById('sheet-'+id),s=sheets.find(x=>x.id===id);if(!el)return;el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');setTimeout(()=>{let t;if(s&&s.treba==null){t=el.querySelector('select');}else{const inps=[...el.querySelectorAll('.nrow input')];t=inps.find(i=>!i.value.trim())||inps[inps.length-1];}t&&t.focus({preventScroll:true});},380);}
 function cardClick(e,id){if(e.target.closest('input,select,button,textarea,a'))return;const root=document.getElementById('sheet-'+id),s=sheets.find(x=>x.id===id);if(!root||!s)return;if(s.treba==null){const sel=root.querySelector('select');sel&&sel.focus();}else{const inps=[...root.querySelectorAll('.nrow input')],t=inps.find(i=>!i.value.trim())||inps[inps.length-1];t&&t.focus();}}
 function removeSheet(id){sheets=sheets.filter(s=>s.id!==id);render();}
-function setTreba(id,n){sheets.find(x=>x.id===id).treba=+n;render();}
+function setTreba(id,n){
+  const s=sheets.find(x=>x.id===id);
+  s.treba=+n;
+  const lim=nameLimit(s);
+  if(s.names.length>lim){ s.names=s.names.slice(0,lim); toast('У цій требі — до '+DONATION_MAX+' імен. Зайві імена прибрано.'); }
+  render();
+}
+function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=v;}
 function setName(id,i,v){const s=sheets.find(x=>x.id===id);s.names[i]=v;updateSheetSum(s);computeTotals();}
 function updateSheetSum(s){const sm=sheetSum(s),txt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);const el=document.querySelector('#sheet-'+s.id+' .sum');if(el)el.textContent=txt;}
-function addName(id){sheets.find(x=>x.id===id).names.push('');render();}
+var DONATION_MAX = 20; // ліміт імен лише для треби «За 1 записку» (на пожертву)
+function nameLimit(s){ return s.treba===7 ? DONATION_MAX : Infinity; }
+function addName(id){
+  const s=sheets.find(x=>x.id===id);
+  if(s.names.length>=nameLimit(s)){toast('У цій требі — до '+DONATION_MAX+' імен. Для більшої кількості створіть ще одну записку.');return;}
+  s.names.push('');render();
+}
 function delName(id,i){const s=sheets.find(x=>x.id===id);s.names.splice(i,1);if(!s.names.length)s.names=[''];render();}
 
 function sheetSum(s){
@@ -136,7 +149,8 @@ function render(){
       <div class="zhead"><div class="cr">${CROSS}</div><div class="ttl">${TYPE[s.type].ttl}</div></div>
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
-      <div class="names">${names}<button class="addname" onclick="addName(${s.id})">Додати імʼя</button><div class="znote">${isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна'}</div></div>
+      ${s.treba===17?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
+      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div></div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;
     box.appendChild(el);
   });
@@ -191,7 +205,7 @@ function buildPayload(){
   let total=0,hasDon=false;
   const out=filled.map(s=>{const tr=TREBY.find(t=>t.n===s.treba),sm=sheetSum(s);let sum=null;
     if(sm.kind==='donation')hasDon=true;else{total+=sm.v;sum=sm.v;}
-    return{type:s.type,trebaN:tr.n,trebaGroup:tr.grp,trebaTitle:tr.t,unit:tr.unit,names:s.names.filter(n=>n.trim()),sum};});
+    return{type:s.type,trebaN:tr.n,trebaGroup:tr.grp,trebaTitle:tr.t,unit:tr.unit,when:(s.when||'').trim().slice(0,120),names:s.names.filter(n=>n.trim()),sum};});
   var hpEl=document.getElementById('hp');
   return{name:(document.getElementById('uname')||{}).value?document.getElementById('uname').value.trim():'',phone:document.getElementById('phone').value.trim(),hp:hpEl?hpEl.value:'',total,hasDonation:hasDon,sheets:out};
 }

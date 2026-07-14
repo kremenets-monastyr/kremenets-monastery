@@ -9,7 +9,9 @@ const ready = NAV.filter(n => n.ready);
         <div class="xbf"><img class="xlogo" src="/logo.png" alt="" width="54" height="54" /><b>Свято-Богоявленський<br />Кременецький монастир</b></div>
         <p style="max-width:34ch;color:#9AA2BE">Православна жіноча обитель у Кременці, заснована 1633 року.</p>
       </div>
-      <div><h4>Розділи</h4>{ready.map((n) => <a href={n.href}>{n.label}</a>)}</div>
+      <div><h4>Розділи</h4>{ready.map((n) => <a href={n.href}>{n.label}</a>)}
+        <a class="xdonate" href="/pozhertva">Пожертва на монастир</a>
+      </div>
       <div><h4>Контакти</h4>
         <span style="display:block;color:#C2C8DC;padding:5px 0">вул. Дубенська, 2, м. Кременець</span>
         <span style="display:block;color:#C2C8DC;padding:5px 0">УПЦ · Тернопільська єпархія</span>

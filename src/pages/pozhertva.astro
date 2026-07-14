@@ -1,0 +1,100 @@
+---
+import Layout from '../layouts/Layout.astro';
+import crossRaw from '../data/chirho.js';
+---
+
+<Layout
+  title="Пожертва на монастир — Свято-Богоявленський Кременецький монастир"
+  description="Добровільна пожертва на потреби обителі: утримання храмів, свічі, просфори, допомога нужденним."
+>
+  <section class="hero pravyla-hero">
+    <div class="wrap">
+      <div class="cr" aria-hidden="true" set:html={crossRaw}></div>
+      <div class="kicker">Милосердя</div>
+      <h1>Пожертва на монастир</h1>
+      <p class="lead">
+        Обитель існує завдяки добровільній допомозі благодійників. Ваша пожертва йде
+        на утримання храмів, свічі й просфори, лікування сестер та допомогу нужденним.
+      </p>
+    </div>
+  </section>
+
+  <section class="pr">
+    <div class="wrap pr-wrap">
+
+      <article class="pr-card dn-card">
+        <h2>Реквізити для пожертви</h2>
+        <div class="dn-req" id="dnReq">Завантаження…</div>
+        <p class="pr-soft">
+          У коментарі до платежу можна написати <b>«Пожертва на монастир»</b>.
+          Якщо ви бажаєте, щоб пожертва пішла на конкретну потребу — вкажіть це в коментарі
+          або зателефонуйте до обителі.
+        </p>
+      </article>
+
+      <article class="pr-card">
+        <h2>На що йдуть пожертви</h2>
+        <ul class="pr-list">
+          <li>утримання й ремонт храмів обителі;</li>
+          <li>свічі, лампадна олія, просфори, богослужбові книги;</li>
+          <li>харчування та лікування сестер;</li>
+          <li>допомога нужденним, прочанам і воїнам;</li>
+          <li>монастирське господарство й сад.</li>
+        </ul>
+        <p class="pr-soft">
+          Обитель щиро вдячна за будь-яку допомогу — велику чи малу.
+          «Доброхітно дає Бог любить» (2 Кор. 9:7).
+        </p>
+      </article>
+
+      <article class="pr-card">
+        <h2>Пожертва за треби</h2>
+        <p>
+          Якщо ви бажаєте подати записку на молитву (за здоровʼя чи за упокій) —
+          скористайтеся записним столом. Там пожертва повʼязується з конкретною требою.
+        </p>
+        <div class="pr-cta" style="margin:16px 0 0">
+          <a class="cta" href="/">Подати записку</a>
+        </div>
+      </article>
+
+      <p class="pr-src">
+        Церковні треби не продаються — молитва не має ціни. Будь-яка сума є добровільною пожертвою
+        на потреби обителі.
+      </p>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var box = document.getElementById('dnReq');
+      if (!box) return;
+      fetch('/api/requisites')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.ok && d.text) {
+            var pre = document.createElement('pre');
+            pre.className = 'dn-pre';
+            pre.textContent = d.text;
+            var btn = document.createElement('button');
+            btn.className = 'cta2 dn-copy';
+            btn.textContent = 'Скопіювати реквізити';
+            btn.addEventListener('click', function () {
+              navigator.clipboard.writeText(d.text);
+              var o = btn.textContent;
+              btn.textContent = 'Скопійовано ✓';
+              setTimeout(function () { btn.textContent = o; }, 1500);
+            });
+            box.innerHTML = '';
+            box.appendChild(pre);
+            box.appendChild(btn);
+          } else {
+            box.innerHTML = '<span class="dn-fb">Реквізити надасть обитель — зверніться до контактів монастиря.</span>';
+          }
+        })
+        .catch(function () {
+          box.innerHTML = '<span class="dn-fb">Реквізити надасть обитель — зверніться до контактів монастиря.</span>';
+        });
+    })();
+  </script>
+</Layout>

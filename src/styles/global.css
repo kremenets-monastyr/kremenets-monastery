@@ -434,3 +434,27 @@ html,body{overflow-x:hidden}
 .pr-cta{text-align:center;margin:26px 0 18px}
 .pr-src{text-align:center;font-size:13px;color:var(--ink-faint);line-height:1.6;max-width:60ch;margin:0 auto}
 @media(max-width:600px){.pr-card{padding:20px 18px}.pr-card h2{font-size:22px}}
+
+.addname:disabled{opacity:.55;cursor:not-allowed;border-color:var(--line);color:var(--muted);background:transparent}
+.addname:disabled:hover{background:transparent;color:var(--muted);border-color:var(--line);transform:none}
+
+
+/* Поле «на яке число» (панахида) */
+.whenrow{margin:var(--sp-3) 0 var(--sp-2)}
+.wlbl{display:block;font-size:12px;font-weight:600;color:var(--blue);margin-bottom:6px}
+.wlbl .wopt{color:var(--muted);font-weight:400}
+.winp{width:100%;min-width:0;font-family:var(--ui);font-size:15px;color:var(--ink);background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.winp::placeholder{color:var(--ink-faint);font-size:13px}
+.winp:focus{outline:none;border-color:var(--ac);background:#fff}
+
+
+/* Кнопка «Пожертва» у футері */
+.xfoot .xdonate{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:11px 18px;border:1.5px solid var(--gold-soft);border-radius:999px;color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;transition:.18s}
+.xfoot .xdonate:hover{background:#fff;color:var(--blue-deep);border-color:#fff}
+
+/* Сторінка «Пожертва» */
+.dn-card{border-left:3px solid var(--gold)}
+.dn-req{background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
+.dn-pre{font-family:var(--ui);font-size:16px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin-bottom:14px;text-align:left}
+.dn-req .dn-copy{width:100%}
+.dn-fb{color:var(--muted);font-size:14px}
