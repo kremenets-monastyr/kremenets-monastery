@@ -75,20 +75,22 @@ const TREBY=[
  {n:1, grp:'Проскомідія',      t:'1 день · заказна Літургія', s:'З вийняттям часточок',  price:2,    unit:'name',     live:1, dead:1},
  {n:2, grp:'Проскомідія',      t:'40 днів · сорокоуст',       s:'З вийняттям часточок',  price:50,   unit:'name',     live:1, dead:1},
  {n:3, grp:'Просте поминання', t:'1 місяць',  s:'Поминання на Літургії', price:20,   unit:'name',     live:1, dead:1},
- {n:4, grp:'Просте поминання', t:'6 місяців', s:'Поминання на Літургії', price:120,  unit:'name',     live:1, dead:1},
- {n:5, grp:'Просте поминання', t:'1 рік',     s:'Поминання на Літургії', price:240,  unit:'name',     live:1, dead:1},
- {n:6, grp:'Просте поминання', t:'5 років',   s:'Поминання на Літургії', price:1200, unit:'name',     live:1, dead:1},
- {n:7, grp:'Просте поминання', t:'За 1 записку', s:'На пожертву',        price:0,    unit:'donation', live:1, dead:1},
- {n:8, grp:'Неусипна псалтир', t:'1 місяць',  s:'На Неусипній Псалтирі', price:20,   unit:'name',     live:1, dead:1},
- {n:9, grp:'Неусипна псалтир', t:'6 місяців', s:'На Неусипній Псалтирі', price:120,  unit:'name',     live:1, dead:1},
- {n:10,grp:'Неусипна псалтир', t:'1 рік',     s:'На Неусипній Псалтирі', price:240,  unit:'name',     live:1, dead:1},
- {n:11,grp:'40 акафістів',     t:'Б. М. «Скорбяща»',          s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
- {n:12,grp:'40 акафістів',     t:'Свт. Миколаю Чудотворцю',   s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
- {n:13,grp:'40 акафістів',     t:'Вмч. Пантелеймону',         s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
- {n:14,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
- {n:15,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
- {n:16,grp:'40 акафістів',     t:'Подячний молебень',         s:'За одне ім\u2019я', price:2, unit:'name', live:1, dead:0},
- {n:17,grp:'Панахида',         t:'Панахида',                  s:'Заупокійне поминання — на пожертву', price:0, unit:'donation', live:0, dead:1},
+ {n:4, grp:'Просте поминання', t:'3 місяці',  s:'Поминання на Літургії', price:60,   unit:'name',     live:1, dead:1},
+ {n:5, grp:'Просте поминання', t:'6 місяців', s:'Поминання на Літургії', price:120,  unit:'name',     live:1, dead:1},
+ {n:6, grp:'Просте поминання', t:'1 рік',     s:'Поминання на Літургії', price:240,  unit:'name',     live:1, dead:1},
+ {n:7, grp:'Просте поминання', t:'5 років',   s:'Поминання на Літургії', price:1200, unit:'name',     live:1, dead:1},
+ {n:8, grp:'Просте поминання', t:'За 1 записку', s:'На пожертву',        price:0,    unit:'donation', live:1, dead:1, maxNames:20},
+ {n:9, grp:'Неусипна псалтир', t:'1 місяць',  s:'На Неусипній Псалтирі', price:20,   unit:'name',     live:1, dead:1},
+ {n:10,grp:'Неусипна псалтир', t:'3 місяці',  s:'На Неусипній Псалтирі', price:60,   unit:'name',     live:1, dead:1},
+ {n:11,grp:'Неусипна псалтир', t:'6 місяців', s:'На Неусипній Псалтирі', price:120,  unit:'name',     live:1, dead:1},
+ {n:12,grp:'Неусипна псалтир', t:'1 рік',     s:'На Неусипній Псалтирі', price:240,  unit:'name',     live:1, dead:1},
+ {n:13,grp:'40 акафістів',     t:'Б. М. «Скорбяща»',          s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
+ {n:14,grp:'40 акафістів',     t:'Свт. Миколаю Чудотворцю',   s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
+ {n:15,grp:'40 акафістів',     t:'Вмч. Пантелеймону',         s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
+ {n:16,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
+ {n:17,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
+ {n:18,grp:'40 акафістів',     t:'Подячний молебень',         s:'За одне ім\u2019я', price:2, unit:'name', live:1, dead:0},
+ {n:19,grp:'Панахида',         t:'Панахида',                  s:'Заупокійне поминання — на пожертву', price:0, unit:'donation', live:0, dead:1, askWhen:1},
 ];
 const fmt=v=>v.toLocaleString('uk-UA')+' грн';
 const TYPE={living:{ttl:"За здоров'я",cls:'living'},dead:{ttl:"За упокій",cls:'dead'}};
@@ -111,8 +113,10 @@ function setTreba(id,n){
 function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=v;}
 function setName(id,i,v){const s=sheets.find(x=>x.id===id);s.names[i]=v;updateSheetSum(s);computeTotals();}
 function updateSheetSum(s){const sm=sheetSum(s),txt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);const el=document.querySelector('#sheet-'+s.id+' .sum');if(el)el.textContent=txt;}
-var DONATION_MAX = 20; // ліміт імен лише для треби «За 1 записку» (на пожертву)
-function nameLimit(s){ return s.treba===7 ? DONATION_MAX : Infinity; }
+var DONATION_MAX = 20; // ліміт імен для треби «За 1 записку» (на пожертву)
+function trebaOf(s){ return s.treba!=null ? TREBY.find(x=>x.n===s.treba) : null; }
+function nameLimit(s){ const tr=trebaOf(s); return (tr&&tr.maxNames) ? tr.maxNames : Infinity; }
+function asksWhen(s){ const tr=trebaOf(s); return !!(tr&&tr.askWhen); }
 function addName(id){
   const s=sheets.find(x=>x.id===id);
   if(s.names.length>=nameLimit(s)){toast('У цій требі — до '+DONATION_MAX+' імен. Для більшої кількості створіть ще одну записку.');return;}
@@ -149,7 +153,7 @@ function render(){
       <div class="zhead"><div class="cr">${CROSS}</div><div class="ttl">${TYPE[s.type].ttl}</div></div>
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
-      ${s.treba===17?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
+      ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
       <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div></div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;
     box.appendChild(el);

@@ -85,7 +85,8 @@ export async function onRequestPost(context) {
   if (!name) return json({ ok: false, error: "Вкажіть ваше ім’я." }, 400);
   if (name.length > 100) return json({ ok: false, error: "Ім’я задовге." }, 400);
   if (!phone) return json({ ok: false, error: "Вкажіть контактний номер телефону." }, 400);
-  const donationTooMany = sheets.some((s) => Number(s.trebaN) === 7 && ((s.names || []).length) > 20);
+  const donationTooMany = sheets.some((s) =>
+    String(s.trebaTitle || "").indexOf("За 1 записку") === 0 && ((s.names || []).length) > 20);
   if (donationTooMany) return json({ ok: false, error: "У требі «За 1 записку» — не більше 20 імен." }, 400);
   const totalNames = sheets.reduce((a, s) => a + ((s.names || []).length), 0);
   if (totalNames === 0) return json({ ok: false, error: "Додайте хоча б одне ім’я." }, 400);
