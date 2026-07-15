@@ -1,2 +1,7 @@
 User-agent: *
 Allow: /
+
+# Службові сторінки записок не індексуємо
+Disallow: /z/
+
+Sitemap: https://kremenets-monastyr.org/sitemap-index.xml

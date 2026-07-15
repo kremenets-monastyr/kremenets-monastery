@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
 export default defineConfig({
-  site: 'https://example.org',
+  site: 'https://kremenets-monastyr.org',
   output: 'static',
 });

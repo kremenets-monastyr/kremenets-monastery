@@ -75,6 +75,20 @@ export async function onRequestPost(context) {
 
   if (d.hp) return json({ ok: true }); // антиспам-пастка: тихо ігноруємо ботів
 
+  // Обмеження частоти: не більше 5 записок за 10 хв з однієї IP-адреси.
+  // Захищає канал обителі від заливання фейковими записками.
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  if (env.RECORDS && ip !== "unknown") {
+    try {
+      const rlKey = "rl:" + ip;
+      const prev = parseInt((await env.RECORDS.get(rlKey)) || "0", 10);
+      if (prev >= 5) {
+        return json({ ok: false, error: "Забагато записок поспіль. Спробуйте за 10 хвилин або зателефонуйте до обителі." }, 429);
+      }
+      await env.RECORDS.put(rlKey, String(prev + 1), { expirationTtl: 600 });
+    } catch (e) { /* якщо KV недоступний — не блокуємо подання */ }
+  }
+
   const name = (d.name || "").toString().trim();
   const phone = (d.phone || "").toString().trim();
   const sheets = Array.isArray(d.sheets) ? d.sheets : [];
