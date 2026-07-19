@@ -75,20 +75,20 @@ const TREBY=[
  {n:1, grp:'Проскомідія',      t:'1 день · заказна Літургія', s:'З вийняттям часточок',  price:2,    unit:'name',     live:1, dead:1},
  {n:2, grp:'Проскомідія',      t:'40 днів · сорокоуст',       s:'З вийняттям часточок',  price:50,   unit:'name',     live:1, dead:1},
  {n:3, grp:'Просте поминання', t:'1 місяць',  s:'Поминання на Літургії', price:20,   unit:'name',     live:1, dead:1},
- {n:4, grp:'Просте поминання', t:'3 місяці',  s:'Поминання на Літургії', price:60,   unit:'name',     live:1, dead:1},
- {n:5, grp:'Просте поминання', t:'6 місяців', s:'Поминання на Літургії', price:120,  unit:'name',     live:1, dead:1},
- {n:6, grp:'Просте поминання', t:'1 рік',     s:'Поминання на Літургії', price:240,  unit:'name',     live:1, dead:1},
- {n:7, grp:'Просте поминання', t:'5 років',   s:'Поминання на Літургії', price:1200, unit:'name',     live:1, dead:1},
+ {n:4, grp:'Просте поминання', t:'3 місяці',  s:'Поминання на Літургії', price:60,   unit:'name',     live:1, long:1, dead:1},
+ {n:5, grp:'Просте поминання', t:'6 місяців', s:'Поминання на Літургії', price:120,  unit:'name',     live:1, long:1, dead:1},
+ {n:6, grp:'Просте поминання', t:'1 рік',     s:'Поминання на Літургії', price:240,  unit:'name',     live:1, long:1, dead:1},
+ {n:7, grp:'Просте поминання', t:'5 років',   s:'Поминання на Літургії', price:1200, unit:'name',     live:1, long:1, dead:1},
  {n:8, grp:'Просте поминання', t:'За 1 записку', s:'На пожертву',        price:0,    unit:'donation', live:1, dead:1, maxNames:20},
  {n:9, grp:'Неусипна псалтир', t:'1 місяць',  s:'На Неусипній Псалтирі', price:20,   unit:'name',     live:1, dead:1},
- {n:10,grp:'Неусипна псалтир', t:'3 місяці',  s:'На Неусипній Псалтирі', price:60,   unit:'name',     live:1, dead:1},
- {n:11,grp:'Неусипна псалтир', t:'6 місяців', s:'На Неусипній Псалтирі', price:120,  unit:'name',     live:1, dead:1},
- {n:12,grp:'Неусипна псалтир', t:'1 рік',     s:'На Неусипній Псалтирі', price:240,  unit:'name',     live:1, dead:1},
+ {n:10,grp:'Неусипна псалтир', t:'3 місяці',  s:'На Неусипній Псалтирі', price:60,   unit:'name',     live:1, long:1, dead:1},
+ {n:11,grp:'Неусипна псалтир', t:'6 місяців', s:'На Неусипній Псалтирі', price:120,  unit:'name',     live:1, long:1, dead:1},
+ {n:12,grp:'Неусипна псалтир', t:'1 рік',     s:'На Неусипній Псалтирі', price:240,  unit:'name',     live:1, long:1, dead:1},
  {n:13,grp:'40 акафістів',     t:'Б. М. «Скорбяща»',          s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
  {n:14,grp:'40 акафістів',     t:'Свт. Миколаю Чудотворцю',   s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
  {n:15,grp:'40 акафістів',     t:'Вмч. Пантелеймону',         s:'40 акафістів', price:30, unit:'name', live:1, dead:0},
- {n:16,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
- {n:17,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'Молебень перед іконою', price:60, unit:'name', live:1, dead:0},
+ {n:16,grp:'40 акафістів',     t:'«Неупиваєма Чаша» · 1 рік', s:'Молебень перед іконою', price:60, unit:'name', live:1, long:1, dead:0},
+ {n:17,grp:'40 акафістів',     t:'«Всецариця» · 1 рік',       s:'Молебень перед іконою', price:60, unit:'name', live:1, long:1, dead:0},
  {n:18,grp:'40 акафістів',     t:'Подячний молебень',         s:'За одне ім\u2019я', price:2, unit:'name', live:1, dead:0},
  {n:19,grp:'Панахида',         t:'Панахида',                  s:'Заупокійне поминання — на пожертву', price:0, unit:'donation', live:0, dead:1, askWhen:1},
 ];
@@ -138,8 +138,21 @@ function isWarrior(name){
   if(/(^|[\s,;(])в\.(\s|$)/.test(s))return true;
   return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
 }
-function payableCount(s){ return s.names.filter(n=>n.trim()&&!isWarrior(n)).length; }
-function freeCount(s){ return s.names.filter(n=>n.trim()&&isWarrior(n)).length; }
+/* Воїнів обитель приймає на строк до 1 місяця (40 днів).
+   На довших требах безкоштовне поминання не діє — треба подати заново, коли строк вийде. */
+function isLongTerm(title){ return /(3\s*місяц|6\s*місяц|1\s*рік|5\s*рок)/i.test(String(title||'')); }
+function trebaLong(s){ const tr=trebaOf(s); return !!(tr && (tr.long || isLongTerm(tr.t))); }
+/* Воїнів поминаємо безкоштовно завжди: за упокій — на будь-який строк,
+   за здоровʼя — до 1 місяця (довші треби взагалі не приймаються, див. warriorTooLong). */
+function warriorFree(s,nm){ return isWarrior(nm); }
+
+/* За здоровʼя воїнів обитель приймає на строк до 1 місяця (40 днів).
+   Довші треби для воїнів не приймаються — треба подати наново після завершення. */
+function warriorTooLong(s){
+  return s.type==='living' && trebaLong(s) && s.names.some(n=>isWarrior(n));
+}
+function payableCount(s){ return s.names.filter(n=>n.trim()&&!warriorFree(s,n)).length; }
+function freeCount(s){ return s.names.filter(n=>n.trim()&&warriorFree(s,n)).length; }
 
 function sheetSum(s){
   if(s.treba==null)return null;
@@ -165,8 +178,10 @@ function render(){
     const isL=s.type==='living';
     const ph0=isL?'напр. Іоанна, болящого':'напр. Іоанна, новопреставленого';
     const names=s.names.map((nm,i)=>{
-      const w=isWarrior(nm);
-      return `<div class="nrow${w?' warrior':''}"><span class="nnum">${i+1}</span><input value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)">${w?'<span class="wfree">безкоштовно</span>':''}<button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`;
+      const isW=isWarrior(nm), free=warriorFree(s,nm), late=isW&&!free;
+      const tag = free ? '<span class="wfree">безкоштовно</span>'
+                : late ? '<span class="wlong">лише до 1 місяця</span>' : '';
+      return `<div class="nrow${free?' warrior':''}${late?' warrior-long':''}"><span class="nnum">${i+1}</span><input value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)">${tag}<button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`;
     }).join('');
     const el=document.createElement('div');el.className='zap '+TYPE[s.type].cls;el.id='sheet-'+s.id;el.setAttribute('onclick','cardClick(event,'+s.id+')');
     el.innerHTML=`<button class="x" onclick="removeSheet(${s.id})">видалити</button>
@@ -174,7 +189,9 @@ function render(){
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
       ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
-      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div><div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис — «воїн», «в.», «полоненого», «безвісти зниклого» — і його не буде враховано в суму.</div></div>
+      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div>${warriorTooLong(s)
+  ? '<div class="warr-note warr-stop">⚠️ <b>За здоровʼя воїнів приймаємо на строк до 1 місяця (40 днів).</b> Оберіть «1 день», «40 днів · сорокоуст» або «1 місяць». Коли строк вийде, попросимо подати записку знову.</div>'
+  : '<div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис: «воїн», «в.», «полоненого», «безвісти зниклого». За здоровʼя — на строк до 1 місяця (40 днів), за упокій — на будь-який строк.</div>'}</div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;
     box.appendChild(el);
   });
@@ -224,6 +241,11 @@ function computeTotals(){
   }).join('');
 })();
 
+function warriorBlock(){
+  const bad=sheets.filter(s=>warriorTooLong(s));
+  if(!bad.length)return null;
+  return 'За здоровʼя воїнів приймаємо на строк до 1 місяця (40 днів). Змініть требу в записці.';
+}
 function buildPayload(){
   const filled=sheets.filter(s=>s.treba!=null&&s.names.some(n=>n.trim()));
   let total=0,hasDon=false;
@@ -331,6 +353,8 @@ async function sendOrder(){
   if(!sheets.some(function(s){return s.treba!=null&&s.names.some(function(n){return n.trim();});})){box.textContent='Заповніть хоча б одну записку';box.className='formmsg err';return;}
   if(!name){box.textContent='Вкажіть ваше ім’я';box.className='formmsg err';return;}
   if(!phone){box.textContent='Вкажіть контактний номер телефону';box.className='formmsg err';return;}
+  var wb=warriorBlock();
+  if(wb){box.textContent=wb;box.className='formmsg err';return;}
   krRulesModal(function(){ krDoSend(name,phone,box,btn); });
 }
 async function krDoSend(name,phone,box,btn){

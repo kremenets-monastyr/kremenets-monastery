@@ -1,4 +1,4 @@
-import { renderCard, keyboard, getTopics, addLog, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
+import { renderCard, keyboard, getTopics, addLog, isWarrior as isWarriorSrv, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
 /**
  * Cloudflare Pages Function — приймає записку з сайту, надсилає її у Telegram
  * і (за наявності KV) зберігає запис на 7 днів під унікальним номером.
@@ -100,6 +100,16 @@ export async function onRequestPost(context) {
   if (!name) return json({ ok: false, error: "Вкажіть ваше ім’я." }, 400);
   if (name.length > 100) return json({ ok: false, error: "Ім’я задовге." }, 400);
   if (!phone) return json({ ok: false, error: "Вкажіть контактний номер телефону." }, 400);
+  // За здоровʼя воїнів — не довше 1 місяця (40 днів)
+  const LONG = ["3 місяці", "6 місяців", "1 рік", "5 років"];
+  const warriorLong = sheets.some((s) =>
+    s.type === "living" &&
+    LONG.some((x) => String(s.trebaTitle || "").indexOf(x) === 0 || String(s.trebaTitle || "").indexOf("· 1 рік") > 0) &&
+    (s.names || []).some((n) => isWarriorSrv(n)));
+  if (warriorLong) {
+    return json({ ok: false, error: "За здоровʼя воїнів приймаємо на строк до 1 місяця (40 днів)." }, 400);
+  }
+
   const donationTooMany = sheets.some((s) =>
     String(s.trebaTitle || "").indexOf("За 1 записку") === 0 && ((s.names || []).length) > 20);
   if (donationTooMany) return json({ ok: false, error: "У требі «За 1 записку» — не більше 20 імен." }, 400);

@@ -148,12 +148,19 @@ function html(body, status) {
 }
 
 async function getRequisites(env) {
-  try {
-    const r = await fetch("https://api.telegram.org/bot" + env.TG_BOT_TOKEN + "/getChat?chat_id=" + encodeURIComponent(env.TG_CHAT_ID));
-    const d = await r.json();
-    const pin = d && d.ok && d.result && d.result.pinned_message;
-    return (pin && (pin.text || pin.caption)) || null;
-  } catch (e) { return null; }
+  // Закріплене повідомлення з реквізитами може бути в каналі або в групі —
+  // перевіряємо по черзі, доки не знайдемо.
+  const chats = [env.TG_REQUISITES_CHAT_ID, env.TG_CHANNEL_ID, env.TG_CHAT_ID].filter(Boolean);
+  for (const chat of chats) {
+    try {
+      const r = await fetch("https://api.telegram.org/bot" + env.TG_BOT_TOKEN + "/getChat?chat_id=" + encodeURIComponent(chat));
+      const d = await r.json();
+      const pin = d && d.ok && d.result && d.result.pinned_message;
+      const text = pin && (pin.text || pin.caption);
+      if (text) return text;
+    } catch (e) { /* пробуємо наступний */ }
+  }
+  return null;
 }
 
 export async function onRequestGet(context) {
