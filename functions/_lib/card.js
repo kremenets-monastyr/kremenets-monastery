@@ -8,7 +8,8 @@ export const TTL_SECONDS = 90 * 24 * 3600; // 90 днів історії
 
 export const STATUS = {
   new:  { label: "НОВА",      dot: "⚪", tag: "#нова" },
-  work: { label: "В РОБОТІ",  dot: "🟡", tag: "#в_роботі" },
+  work:  { label: "В РОБОТІ",   dot: "🟡", tag: "#в_роботі" },
+  check: { label: "ПЕРЕВІРКА",  dot: "🟠", tag: "#перевірка" },
   paid: { label: "ОПЛАЧЕНО",  dot: "🟢", tag: "#оплачено" },
   arch: { label: "АРХІВ",     dot: "📦", tag: "#архів" },
 };
@@ -16,7 +17,8 @@ export const STATUS = {
 /** Теми (підгрупи) — воронка: нові → в роботі → оплачені → архів */
 export const TOPICS = [
   { key: "new",  name: "🆕 Нові",      color: 0x6FB9F0 },
-  { key: "work", name: "🟡 В роботі",  color: 0xFFD67E },
+  { key: "work",  name: "🟡 В роботі",       color: 0xFFD67E },
+  { key: "check", name: "🟠 Перевірка оплати", color: 0xFB6F5F },
   { key: "paid", name: "🟢 Оплачені",  color: 0x8EEE98 },
   { key: "arch", name: "📦 Архів",     color: 0xCB86DB },
 ];
@@ -84,10 +86,11 @@ export function renderCard(rec) {
   const log = [];
   if (rec.assignee) log.push("👤 Взяв(ла): <b>" + esc(rec.assignee) + "</b> · " + esc(kyivTime(rec.assignedTs)));
   if (rec.status === "paid") {
-    const how = rec.paidAuto ? " (автоматично)" : (rec.paidBy ? " · " + esc(rec.paidBy) : "");
-    log.push("💰 Оплату підтверджено · " + esc(kyivTime(rec.paidTs)) + how);
+    log.push("💰 Оплату підтвердила: <b>" + esc(rec.paidBy || "—") + "</b> · " + esc(kyivTime(rec.paidTs)));
   }
   if (rec.receipt) log.push("🧾 Квитанцію надіслано" + (rec.receiptTs ? " · " + esc(kyivTime(rec.receiptTs)) : ""));
+  if (rec.bankAmount) log.push("🏦 Надходження за випискою: <b>" + money(rec.bankAmount) + "</b>" + (rec.bankTs ? " · " + esc(kyivTime(rec.bankTs)) : ""));
+  if (rec.status === "check") log.push("⏳ <b>Очікує перевірки сестрою</b>");
   if (log.length) { L.push("━━━━━━━━━━━━"); log.forEach((x) => L.push(x)); }
 
   // Коментарі менеджерів
@@ -116,6 +119,9 @@ export function keyboard(rec) {
   } else if (rec.status === "work") {
     rows.push([{ text: "🟢 Оплачено", callback_data: "s:" + c + ":paid" }]);
     rows.push([{ text: "↩︎ Повернути в нові", callback_data: "s:" + c + ":new" }]);
+  } else if (rec.status === "check") {
+    rows.push([{ text: "✅ Підтвердити оплату", callback_data: "s:" + c + ":paid" }]);
+    rows.push([{ text: "↩︎ Повернути в роботу", callback_data: "s:" + c + ":work" }]);
   } else if (rec.status === "paid") {
     rows.push([{ text: "📦 В архів", callback_data: "s:" + c + ":arch" }]);
     rows.push([{ text: "↩︎ Повернути в роботу", callback_data: "s:" + c + ":work" }]);
@@ -196,15 +202,17 @@ export async function saveTopics(env, map) {
 
 /** Створити теми-воронку в групі (одноразово, командою /setup) */
 export async function createTopics(env, chatId) {
-  const map = {};
+  const map = (await getTopics(env)) || {};
+  const added = [];
   for (const t of TOPICS) {
+    if (map[t.key]) continue;                     // така тема вже є — не дублюємо
     const r = await tg(env, "createForumTopic", {
       chat_id: chatId, name: t.name, icon_color: t.color,
     });
-    if (r && r.ok && r.result) map[t.key] = r.result.message_thread_id;
+    if (r && r.ok && r.result) { map[t.key] = r.result.message_thread_id; added.push(t.name); }
   }
   if (Object.keys(map).length) await saveTopics(env, map);
-  return map;
+  return { map, added };
 }
 
 /**

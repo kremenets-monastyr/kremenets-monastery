@@ -66,11 +66,8 @@ export async function onRequestPost(context) {
       if (rec) {
         rec.receipt = true;
         rec.receiptTs = Date.now();
-        if (rec.status !== "paid") {
-          rec.status = "paid";
-          rec.paidTs = Date.now();
-          rec.paidAuto = true;   // підтверджено квитанцією від людини
-        }
+        // Оплату підтверджує лише сестра — квитанція йде на перевірку
+        if (rec.status !== "paid") rec.status = "check";
         await saveRecord(env, rec);
         await placeCard(env, rec);
       }

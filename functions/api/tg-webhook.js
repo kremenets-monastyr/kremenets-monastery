@@ -56,6 +56,10 @@ export async function onRequestPost(context) {
         rec.paidTs = now;
         rec.paidBy = who;
         rec.paidAuto = false;
+        rec.paidConfirmedBy = who;
+        if (!rec.assignee) { rec.assignee = who; rec.assignedTs = now; }
+      } else if (next === "check") {
+        rec.status = "check";
         if (!rec.assignee) { rec.assignee = who; rec.assignedTs = now; }
       } else if (next === "arch") {
         rec.status = "arch";
@@ -86,20 +90,14 @@ export async function onRequestPost(context) {
 
   // ---------- 2) Команда /setup — одноразове створення тем-воронки ----------
   if (msg && typeof msg.text === "string" && msg.text.trim().split("@")[0] === "/setup") {
-    const existing = await getTopics(env);
-    if (existing) {
-      await tg(env, "sendMessage", {
-        chat_id: msg.chat.id,
-        text: "Теми вже створено. Щоб перестворити — спершу видаліть їх і напишіть /setup_reset.",
-      });
-      return ok();
-    }
-    const map = await createTopics(env, msg.chat.id);
-    const done = Object.keys(map).length;
+    const { map, added } = await createTopics(env, msg.chat.id);
+    const all = Object.keys(map).length;
     await tg(env, "sendMessage", {
       chat_id: msg.chat.id,
-      text: done
-        ? "✅ Створено теми: 🆕 Нові · 🟡 В роботі · 🟢 Оплачені · 📦 Архів\nНові записки надходитимуть у «Нові», а далі рухатимуться за статусом."
+      text: all
+        ? (added.length
+            ? "✅ Додано теми: " + added.join(" · ") + "\nВоронка: 🆕 Нові → 🟡 В роботі → 🟠 Перевірка оплати → 🟢 Оплачені → 📦 Архів"
+            : "Усі теми вже створено. Воронка готова.")
         : "⚠️ Не вдалося створити теми. Перевірте, чи ввімкнено «Теми» в налаштуваннях групи і чи має бот право керувати темами.",
     });
     return ok();

@@ -55,17 +55,17 @@ export async function onRequestPost(context) {
     const rec = await getRecord(env, code);
     if (rec) {
       if (rec.status !== "paid") {
-        rec.status = "paid";
-        rec.paidTs = when;
-        rec.paidAuto = true;
-        rec.paidAmount = amount;
+        rec.status = "check";
+        rec.bankAmount = amount;
+        rec.bankTs = when;
         await saveRecord(env, rec);
         await placeCard(env, rec);
         await tg(env, "sendMessage", {
           chat_id: rec.chatId || env.TG_CHAT_ID,
+          ...(rec.threadId ? { message_thread_id: rec.threadId } : {}),
           reply_to_message_id: rec.msgId,
-          text: "💰 <b>Надійшла пожертва " + money(amount) + "</b>\n" +
-                "Записку №" + rec.code + " позначено як оплачену автоматично.",
+          text: "🏦 <b>Надходження " + money(amount) + "</b>\n" +
+                "Схоже на записку №" + rec.code + ". Перевірте й підтвердіть оплату.",
           parse_mode: "HTML",
         });
       }
@@ -83,9 +83,9 @@ export async function onRequestPost(context) {
     await tg(env, "sendMessage", {
       chat_id: g.chatId || env.TG_CHAT_ID,
       reply_to_message_id: g.msgId,
-      text: head + "\n\nСхоже на записку <b>№" + g.code + "</b> (" + g.name + ").\nПідтвердити оплату?",
+      text: head + "\n\nСхоже на записку <b>№" + g.code + "</b> (" + g.name + ").\nПеревірте й підтвердіть оплату.",
       parse_mode: "HTML",
-      reply_markup: { inline_keyboard: [[{ text: "🟢 Так, оплачено", callback_data: "s:" + g.code + ":paid" }]] },
+      reply_markup: { inline_keyboard: [[{ text: "🟠 На перевірку", callback_data: "s:" + g.code + ":check" }]] },
     });
   } else if (guesses.length > 1) {
     await tg(env, "sendMessage", {
@@ -94,7 +94,7 @@ export async function onRequestPost(context) {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: guesses.slice(0, 6).map((g) => [
-          { text: "№" + g.code + " · " + g.name, callback_data: "s:" + g.code + ":paid" },
+          { text: "№" + g.code + " · " + g.name, callback_data: "s:" + g.code + ":check" },
         ]),
       },
     });
