@@ -111,7 +111,13 @@ function setTreba(id,n){
   render();
 }
 function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=v;}
-function setName(id,i,v){const s=sheets.find(x=>x.id===id);s.names[i]=v;updateSheetSum(s);computeTotals();}
+function setName(id,i,v){
+  const s=sheets.find(x=>x.id===id);
+  const was=isWarrior(s.names[i]);
+  s.names[i]=v;
+  if(was!==isWarrior(v)){ render(); const el=document.querySelector('#sheet-'+id+' .nrow:nth-of-type('+(i+1)+') input'); if(el){el.focus();el.setSelectionRange(v.length,v.length);} return; }
+  updateSheetSum(s);computeTotals();
+}
 function updateSheetSum(s){const sm=sheetSum(s),txt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);const el=document.querySelector('#sheet-'+s.id+' .sum');if(el)el.textContent=txt;}
 var DONATION_MAX = 20; // ліміт імен для треби «За 1 записку» (на пожертву)
 function trebaOf(s){ return s.treba!=null ? TREBY.find(x=>x.n===s.treba) : null; }
@@ -124,9 +130,20 @@ function addName(id){
 }
 function delName(id,i){const s=sheets.find(x=>x.id===id);s.names.splice(i,1);if(!s.names.length)s.names=[''];render();}
 
+/* Поминання воїнів обитель приймає безкоштовно.
+   Розпізнаємо приписки: воїн, в., боєць, безвісти, полонений тощо. */
+function isWarrior(name){
+  const s=String(name||'').toLowerCase().trim();
+  if(!s)return false;
+  if(/(^|[\s,;(])в\.(\s|$)/.test(s))return true;
+  return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
+}
+function payableCount(s){ return s.names.filter(n=>n.trim()&&!isWarrior(n)).length; }
+function freeCount(s){ return s.names.filter(n=>n.trim()&&isWarrior(n)).length; }
+
 function sheetSum(s){
   if(s.treba==null)return null;
-  const tr=TREBY.find(t=>t.n===s.treba),cnt=s.names.filter(n=>n.trim()).length;
+  const tr=TREBY.find(t=>t.n===s.treba),cnt=payableCount(s);
   if(tr.unit==='donation')return{kind:'donation'};
   if(tr.unit==='fixed')return{kind:'sum',v:tr.price};
   if(tr.unit==='list')return{kind:'sum',v:cnt?tr.price:0};
@@ -147,14 +164,17 @@ function render(){
     const sm=sheetSum(s),sumTxt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);
     const isL=s.type==='living';
     const ph0=isL?'напр. Іоанна, болящого':'напр. Іоанна, новопреставленого';
-    const names=s.names.map((nm,i)=>`<div class="nrow"><span class="nnum">${i+1}</span><input value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)"><button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`).join('');
+    const names=s.names.map((nm,i)=>{
+      const w=isWarrior(nm);
+      return `<div class="nrow${w?' warrior':''}"><span class="nnum">${i+1}</span><input value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)">${w?'<span class="wfree">безкоштовно</span>':''}<button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`;
+    }).join('');
     const el=document.createElement('div');el.className='zap '+TYPE[s.type].cls;el.id='sheet-'+s.id;el.setAttribute('onclick','cardClick(event,'+s.id+')');
     el.innerHTML=`<button class="x" onclick="removeSheet(${s.id})">видалити</button>
       <div class="zhead"><div class="cr">${CROSS}</div><div class="ttl">${TYPE[s.type].ttl}</div></div>
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
       ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
-      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div></div>
+      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div><div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис — «воїн», «в.», «полоненого», «безвісти зниклого» — і його не буде враховано в суму.</div></div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;
     box.appendChild(el);
   });

@@ -1,4 +1,4 @@
-import { getRecord, saveRecord, placeCard } from "../_lib/card.js";
+import { getRecord, saveRecord, placeCard, addLog } from "../_lib/card.js";
 /**
  * POST /api/receipt  (multipart/form-data: code, file)
  * Приймає квитанцію (скрін/фото/PDF) і надсилає її у Telegram-канал монастиря,
@@ -67,7 +67,10 @@ export async function onRequestPost(context) {
         rec.receipt = true;
         rec.receiptTs = Date.now();
         // Оплату підтверджує лише сестра — квитанція йде на перевірку
-        if (rec.status !== "paid") rec.status = "check";
+        if (rec.status !== "paid") {
+          rec.status = "check";
+          addLog(rec, { kind: "status", to: "check", text: "надійшла квитанція — потрібна перевірка", who: "сайт" });
+        }
         await saveRecord(env, rec);
         await placeCard(env, rec);
       }

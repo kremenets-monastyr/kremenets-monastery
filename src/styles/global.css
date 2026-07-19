@@ -490,3 +490,11 @@ html,body{overflow-x:hidden}
 
 .pr-short{background:var(--bg-soft);border-style:dashed}
 .pr-short p{font-size:14px;color:var(--muted);margin-bottom:0}
+
+
+/* Поминання воїнів — безкоштовно */
+.nrow.warrior input{border-bottom-color:var(--gold);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.wfree{flex:none;font-size:11px;font-weight:700;color:#8A6D1F;background:#FFF7E6;border:1px solid #F0DCA8;border-radius:999px;padding:3px 9px;white-space:nowrap;letter-spacing:.02em}
+@media(max-width:600px){.wfree{font-size:10px;padding:2px 7px}}
+.warr-note{margin-top:10px;font-size:13px;line-height:1.6;color:var(--muted);background:#FFF7E6;border:1px solid #F0DCA8;border-radius:10px;padding:10px 12px}
+.warr-note b{color:#8A6D1F}

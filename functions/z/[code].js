@@ -3,6 +3,13 @@
  * Читає запис із KV (RECORDS) за номером і показує його разом із поточними реквізитами
  * (із закріпленого повідомлення каналу). Дійсна 7 днів (TTL запису в KV).
  */
+function isWarriorZ(name) {
+  const s = String(name || "").toLowerCase().trim();
+  if (!s) return false;
+  if (/(^|[\s,;(])в\.(\s|$)/.test(s)) return true;
+  return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
+}
+
 function esc(s) {
   return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -29,6 +36,8 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .sh-n{list-style:none;font-size:15px;margin-bottom:6px}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
+.warr{background:#FFF7E6;border-radius:6px;padding:2px 6px}
+.freetag{font-size:11px;color:#8A6D1F;white-space:nowrap}
 .sh-w{font-size:13px;color:var(--blue);background:var(--bg);border-radius:8px;padding:5px 8px;margin-bottom:6px;display:inline-block}
 .total{text-align:right;font-size:16px;margin:6px 2px 20px}
 .total b{font-family:'Monomakh',serif;font-size:22px;color:var(--blue)}
@@ -236,7 +245,8 @@ export async function onRequestGet(context) {
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + receiptBlock + '</div>' +
     shareBlock +
-    '<p class="note">У коментарі до платежу вкажіть <b>номер</b> (' + esc(rec.code || code) + ') або ваше <b>імʼя та телефон</b>.<br>Сторінка доступна 7 днів від подання записки.</p>' +
+    '<p class="note">У призначенні платежу (коментарі) напишіть: <b>пожертва ' + esc(rec.code || code) + '</b>.<br>' +
+    'Якщо коментар додати не вдається — назвіть номер або ваше імʼя й телефон обителі.<br>Сторінка доступна 7 днів від подання записки.</p>' +
     '<details class="acc"><summary class="acc-h"><span>Переглянути записки</span>' +
       '<span class="acc-m">' + nSheets + ' ' + wordSheets + ' · ' + nNames + ' ' + wordNames + '</span>' +
       '<span class="acc-x" aria-hidden="true"></span></summary>' +

@@ -7,20 +7,33 @@
 export const TTL_SECONDS = 90 * 24 * 3600; // 90 днів історії
 
 export const STATUS = {
-  new:  { label: "НОВА",      dot: "⚪", tag: "#нова" },
-  work:  { label: "В РОБОТІ",   dot: "🟡", tag: "#в_роботі" },
-  check: { label: "ПЕРЕВІРКА",  dot: "🟠", tag: "#перевірка" },
-  paid: { label: "ОПЛАЧЕНО",  dot: "🟢", tag: "#оплачено" },
-  arch: { label: "АРХІВ",     dot: "📦", tag: "#архів" },
+  new:   { label: "НОВА",             dot: "⚪", tag: "#нова" },
+  work:  { label: "В РОБОТІ",         dot: "🟡", tag: "#в_роботі" },
+  call:  { label: "НА ДЗВІНОК",       dot: "📞", tag: "#на_дзвінок" },
+  print: { label: "НА ДРУК",          dot: "🖨", tag: "#на_друк" },
+  check: { label: "ПЕРЕВІРКА ОПЛАТИ", dot: "🟠", tag: "#перевірка" },
+  paid:  { label: "ОПЛАЧЕНО",         dot: "🟢", tag: "#оплачено" },
+  arch:  { label: "АРХІВ",            dot: "📦", tag: "#архів" },
 };
+
+/** Слова-приписки, за якими впізнаємо воїна (поминання безкоштовне) */
+export function isWarrior(name) {
+  const s = String(name || "").toLowerCase().trim();
+  if (!s) return false;
+  if (/(^|[\s,;(])в\.(\s|$)/.test(s)) return true;
+  return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
+}
 
 /** Теми (підгрупи) — воронка: нові → в роботі → оплачені → архів */
 export const TOPICS = [
-  { key: "new",  name: "🆕 Нові",      color: 0x6FB9F0 },
-  { key: "work",  name: "🟡 В роботі",       color: 0xFFD67E },
+  { key: "all",   name: "📋 Усі",              color: 0x6FB9F0 },
+  { key: "new",   name: "🆕 Нові",             color: 0x6FB9F0 },
+  { key: "work",  name: "🟡 В роботі",         color: 0xFFD67E },
+  { key: "call",  name: "📞 На дзвінок",       color: 0xFF93B2 },
+  { key: "print", name: "🖨 На друк",          color: 0xCB86DB },
   { key: "check", name: "🟠 Перевірка оплати", color: 0xFB6F5F },
-  { key: "paid", name: "🟢 Оплачені",  color: 0x8EEE98 },
-  { key: "arch", name: "📦 Архів",     color: 0xCB86DB },
+  { key: "paid",  name: "🟢 Оплачені",         color: 0x8EEE98 },
+  { key: "arch",  name: "📦 Архів",            color: 0xCB86DB },
 ];
 
 export function esc(s) {
@@ -59,7 +72,7 @@ export function renderCard(rec) {
   L.push(st.dot + " <b>" + st.label + "</b>  ·  №" + esc(rec.code));
   L.push("🕓 " + esc(kyivTime(rec.ts)));
 
-  let total = 0, hasDon = false;
+  let total = 0, hasDon = false, freeTotal = 0;
   (rec.sheets || []).forEach((s) => {
     const ty = TYPE[s.type] || { t: "—", e: "•" };
     L.push("━━━━━━━━━━━━");
@@ -69,7 +82,14 @@ export function renderCard(rec) {
     if (s.when) L.push("🗓 Коли: " + esc(String(s.when).slice(0, 120)));
     const names = Array.isArray(s.names) ? s.names : [];
     L.push("Імена (" + names.length + "):");
-    names.forEach((n, i) => L.push("  " + (i + 1) + ". " + esc(n)));
+    names.forEach((n, i) => {
+      if (isWarrior(n)) {
+        freeTotal++;
+        L.push("  " + (i + 1) + ". <u><b>" + esc(n) + "</b></u> 🕯 <i>безкоштовно</i>");
+      } else {
+        L.push("  " + (i + 1) + ". " + esc(n));
+      }
+    });
     if (s.sum == null) { hasDon = true; L.push("Сума: на пожертву"); }
     else { total += Number(s.sum) || 0; L.push("Сума: " + money(s.sum)); }
   });
@@ -78,57 +98,63 @@ export function renderCard(rec) {
   let tot = total > 0 ? money(total) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
   L.push("💳 <b>Разом:</b> " + (tot || "—"));
+  if (freeTotal) L.push("🕯 <b>Воїнів (безкоштовно):</b> " + freeTotal);
   L.push("👤 <b>Ім’я:</b> " + esc(rec.name || "—"));
   L.push("📞 <b>Телефон:</b> " + esc(rec.phone || "—"));
   if (rec.origin) L.push("🔗 Записки: " + rec.origin + "/z/" + rec.code);
 
-  // Хто що зробив
-  const log = [];
-  if (rec.assignee) log.push("👤 Взяв(ла): <b>" + esc(rec.assignee) + "</b> · " + esc(kyivTime(rec.assignedTs)));
-  if (rec.status === "paid") {
-    log.push("💰 Оплату підтвердила: <b>" + esc(rec.paidBy || "—") + "</b> · " + esc(kyivTime(rec.paidTs)));
-  }
-  if (rec.receipt) log.push("🧾 Квитанцію надіслано" + (rec.receiptTs ? " · " + esc(kyivTime(rec.receiptTs)) : ""));
-  if (rec.bankAmount) log.push("🏦 Надходження за випискою: <b>" + money(rec.bankAmount) + "</b>" + (rec.bankTs ? " · " + esc(kyivTime(rec.bankTs)) : ""));
-  if (rec.status === "check") log.push("⏳ <b>Очікує перевірки сестрою</b>");
-  if (log.length) { L.push("━━━━━━━━━━━━"); log.forEach((x) => L.push(x)); }
+  // Позначки й додаткові відомості
+  const marks = [];
+  if (rec.calledTs)  marks.push("📞 Подзвонила: <b>" + esc(rec.calledBy || "—") + "</b> · " + esc(kyivTime(rec.calledTs)));
+  if (rec.printedTs) marks.push("🖨 Роздрукувала: <b>" + esc(rec.printedBy || "—") + "</b> · " + esc(kyivTime(rec.printedTs)));
+  if (rec.receipt)   marks.push("🧾 Квитанцію надіслано" + (rec.receiptTs ? " · " + esc(kyivTime(rec.receiptTs)) : ""));
+  if (rec.bankAmount) marks.push("🏦 Надходження за випискою: <b>" + money(rec.bankAmount) + "</b>" + (rec.bankTs ? " · " + esc(kyivTime(rec.bankTs)) : ""));
+  if (rec.status === "check") marks.push("⏳ <b>Очікує перевірки сестрою</b>");
+  if (rec.status === "paid") marks.push("💰 Оплату підтвердила: <b>" + esc(rec.paidBy || "—") + "</b> · " + esc(kyivTime(rec.paidTs)));
+  if (marks.length) { L.push("━━━━━━━━━━━━"); marks.forEach((x) => L.push(x)); }
 
-  // Коментарі менеджерів
-  const notes = Array.isArray(rec.notes) ? rec.notes : [];
-  if (notes.length) {
+  // Історія: усі дії й коментарі в хронологічному порядку
+  const log = Array.isArray(rec.log) ? rec.log : [];
+  if (log.length) {
     L.push("━━━━━━━━━━━━");
-    notes.slice(-10).forEach((n) => {
-      L.push("💬 " + esc(n.text) + "  <i>— " + esc(n.who) + ", " + esc(kyivTime(n.ts)) + "</i>");
+    L.push("<b>Хід роботи:</b>");
+    log.slice(-14).forEach((e) => {
+      const icon = e.kind === "note" ? "💬" : (STATUS[e.to] ? STATUS[e.to].dot : "•");
+      L.push(icon + " " + esc(e.text) + "  <i>— " + esc(e.who) + ", " + esc(kyivTime(e.ts)) + "</i>");
     });
   }
 
   L.push("");
-  L.push(st.tag + " #" + String(rec.code || "").replace(/[^A-Za-z0-9]/g, ""));
+  L.push(st.tag + " #" + String(rec.code || "").replace(/[^A-Za-z0-9]/g, "") + (freeTotal ? " #воїни" : ""));
   return L.join("\n");
+}
+
+/** Дописати подію в історію записки */
+export function addLog(rec, entry) {
+  rec.log = Array.isArray(rec.log) ? rec.log : [];
+  rec.log.push({ ts: Date.now(), ...entry });
+  if (rec.log.length > 60) rec.log = rec.log.slice(-60);
 }
 
 /** Кнопки під карткою — показуємо тільки доречні для поточного статусу */
 export function keyboard(rec) {
-  const c = rec.code;
+  const c = rec.code, cur = rec.status || "new";
+  const B = (key, text) => ({ text, callback_data: "s:" + c + ":" + key });
+  const row1 = [], row2 = [];
+
+  if (cur !== "work")  row1.push(B("work",  "🟡 В роботі"));
+  if (cur !== "call")  row1.push(B("call",  "📞 Дзвінок"));
+  if (cur !== "print") row1.push(B("print", "🖨 Друк"));
+
+  if (cur !== "check") row2.push(B("check", "🟠 Перевірка"));
+  if (cur !== "paid")  row2.push(B("paid",  "🟢 Оплачено"));
+  if (cur !== "arch")  row2.push(B("arch",  "📦 Архів"));
+
   const rows = [];
-  if (rec.status === "new") {
-    rows.push([
-      { text: "🟡 Взяти в роботу", callback_data: "s:" + c + ":work" },
-      { text: "🟢 Оплачено", callback_data: "s:" + c + ":paid" },
-    ]);
-  } else if (rec.status === "work") {
-    rows.push([{ text: "🟢 Оплачено", callback_data: "s:" + c + ":paid" }]);
-    rows.push([{ text: "↩︎ Повернути в нові", callback_data: "s:" + c + ":new" }]);
-  } else if (rec.status === "check") {
-    rows.push([{ text: "✅ Підтвердити оплату", callback_data: "s:" + c + ":paid" }]);
-    rows.push([{ text: "↩︎ Повернути в роботу", callback_data: "s:" + c + ":work" }]);
-  } else if (rec.status === "paid") {
-    rows.push([{ text: "📦 В архів", callback_data: "s:" + c + ":arch" }]);
-    rows.push([{ text: "↩︎ Повернути в роботу", callback_data: "s:" + c + ":work" }]);
-  } else {
-    rows.push([{ text: "↩︎ Повернути в оплачені", callback_data: "s:" + c + ":paid" }]);
-  }
-  // Кнопки копіювання (Telegram копіює текст у буфер обміну)
+  if (row1.length) rows.push(row1);
+  if (row2.length) rows.push(row2);
+  if (cur !== "new") rows.push([B("new", "↩︎ Повернути в нові")]);
+
   rows.push([
     { text: "📋 Імена", copy_text: { text: copyNames(rec) } },
     { text: "📞 Телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
@@ -136,16 +162,18 @@ export function keyboard(rec) {
   return { inline_keyboard: rows };
 }
 
-/** Готовий текст записки для вставки в синодик (Telegram обмежує 256 знаками) */
+/** Готовий текст записки для синодика: тип, треба, імена — кожне з нового рядка */
 export function copyNames(rec) {
   const TY = { living: "За здоровʼя", dead: "За упокій" };
-  const parts = [];
-  (rec.sheets || []).forEach((s) => {
-    const head = (TY[s.type] || "") + (s.trebaTitle ? " · " + s.trebaTitle : "");
-    parts.push(head + ": " + (s.names || []).join(", "));
+  const lines = [];
+  (rec.sheets || []).forEach((s, idx) => {
+    if (idx) lines.push("");
+    if (TY[s.type]) lines.push(TY[s.type]);
+    if (s.trebaTitle) lines.push(s.trebaTitle);
+    (s.names || []).forEach((n) => lines.push(n));
   });
-  const t = parts.join("\n") || String(rec.code || "");
-  return t.length > 256 ? t.slice(0, 253) + "…" : t;
+  const t = lines.join("\n") || String(rec.code || "");
+  return t.length > 256 ? t.slice(0, 253) + "…" : t;   // Telegram обмежує 256 знаками
 }
 
 export async function tg(env, method, payload) {

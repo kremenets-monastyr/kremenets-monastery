@@ -6,7 +6,7 @@
  * Захист: Telegram надсилає секрет у заголовку X-Telegram-Bot-Api-Secret-Token.
  * Секрет зберігається в змінній TG_WEBHOOK_SECRET.
  */
-import { STATUS, personName, getRecord, saveRecord, refreshCard, placeCard, createTopics, getTopics, tg } from "../_lib/card.js";
+import { STATUS, personName, getRecord, saveRecord, refreshCard, placeCard, createTopics, getTopics, addLog, tg } from "../_lib/card.js";
 
 function ok() {
   return new Response("ok", { status: 200 });
@@ -47,31 +47,31 @@ export async function onRequestPost(context) {
       const who = personName(cq.from);
       const now = Date.now();
 
+      const prev = rec.status;
+      rec.status = next;
+
       if (next === "work") {
-        rec.status = "work";
-        rec.assignee = who;
-        rec.assignedTs = now;
+        if (!rec.assignee) { rec.assignee = who; rec.assignedTs = now; }
+      } else if (next === "call") {
+        rec.calledBy = who; rec.calledTs = now;
+      } else if (next === "print") {
+        rec.printedBy = who; rec.printedTs = now;
       } else if (next === "paid") {
-        rec.status = "paid";
-        rec.paidTs = now;
-        rec.paidBy = who;
-        rec.paidAuto = false;
-        rec.paidConfirmedBy = who;
+        rec.paidBy = who; rec.paidTs = now;
         if (!rec.assignee) { rec.assignee = who; rec.assignedTs = now; }
-      } else if (next === "check") {
-        rec.status = "check";
-        if (!rec.assignee) { rec.assignee = who; rec.assignedTs = now; }
-      } else if (next === "arch") {
-        rec.status = "arch";
-        rec.archTs = now;
-        rec.archBy = who;
       } else if (next === "new") {
-        rec.status = "new";
-        rec.assignee = null;
-        rec.assignedTs = null;
-        rec.paidTs = null;
-        rec.paidBy = null;
+        rec.assignee = null; rec.assignedTs = null;
+        rec.paidBy = null; rec.paidTs = null;
+      } else if (next === "arch") {
+        rec.archBy = who; rec.archTs = now;
       }
+
+      const TXT = {
+        new: "повернуто в нові", work: "взято в роботу", call: "поставлено на дзвінок",
+        print: "поставлено на друк", check: "передано на перевірку оплати",
+        paid: "оплату підтверджено", arch: "відправлено в архів",
+      };
+      if (prev !== next) addLog(rec, { kind: "status", to: next, text: TXT[next] || next, who });
 
       await saveRecord(env, rec);
       await placeCard(env, rec);   // переносимо картку у відповідну тему
@@ -119,8 +119,7 @@ export async function onRequestPost(context) {
     if (!rec || rec.msgId !== parentId) return ok();
 
     const text = msg.text.trim().slice(0, 300);
-    rec.notes = Array.isArray(rec.notes) ? rec.notes : [];
-    rec.notes.push({ text, who: personName(msg.from), ts: Date.now() });
+    addLog(rec, { kind: "note", text, who: personName(msg.from) });
 
     await saveRecord(env, rec);
     await refreshCard(env, rec);

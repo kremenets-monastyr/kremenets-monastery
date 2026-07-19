@@ -1,4 +1,4 @@
-import { renderCard, keyboard, getTopics, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
+import { renderCard, keyboard, getTopics, addLog, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
 /**
  * Cloudflare Pages Function — приймає записку з сайту, надсилає її у Telegram
  * і (за наявності KV) зберігає запис на 7 днів під унікальним номером.
@@ -118,7 +118,7 @@ export async function onRequestPost(context) {
   const record = {
     code, ts: Date.now(), name, phone,
     total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
-    sheets, origin, status: "new", notes: [],
+    sheets, origin, status: "new", log: [],
   };
 
   // 1) Доставка в Telegram — джерело правди. Без неї не підтверджуємо.
@@ -147,6 +147,21 @@ export async function onRequestPost(context) {
   record.msgId = tgData.result && tgData.result.message_id;
   record.chatId = tgData.result && tgData.result.chat && tgData.result.chat.id;
   if (thread) record.threadId = thread;
+
+  // 1а) Копія в тему «Усі» — повна історія в одному місці, без кнопок
+  if (topics && topics.all) {
+    try {
+      await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chat, message_thread_id: topics.all,
+          text: renderCard(record), parse_mode: "HTML",
+          disable_web_page_preview: true, disable_notification: true,
+        }),
+      });
+    } catch (e) { /* не критично */ }
+  }
 
   // 1б) Копія у старий канал-архів (якщо налаштовано TG_CHANNEL_ID).
   // Це просто дублікат «як було»: без кнопок і статусів, лише для історії.

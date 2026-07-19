@@ -10,7 +10,7 @@
  * Формат розрахований на monobank (corporate/personal API), але
  * розуміє й простий JSON: { amount, comment, ts }.
  */
-import { getRecord, saveRecord, placeCard, tg, money, kyivTime } from "../_lib/card.js";
+import { getRecord, saveRecord, placeCard, addLog, tg, money, kyivTime } from "../_lib/card.js";
 
 function ok(o) {
   return new Response(JSON.stringify(o || { ok: true }), {
@@ -58,6 +58,7 @@ export async function onRequestPost(context) {
         rec.status = "check";
         rec.bankAmount = amount;
         rec.bankTs = when;
+        addLog(rec, { kind: "status", to: "check", text: "надходження за випискою " + money(amount), who: "банк" });
         await saveRecord(env, rec);
         await placeCard(env, rec);
         await tg(env, "sendMessage", {
