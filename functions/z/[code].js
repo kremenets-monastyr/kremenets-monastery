@@ -156,7 +156,7 @@ export async function onRequestGet(context) {
   if (!rec) {
     const inner =
       '<div class="wrap"><div class="card">' +
-      '<div class="brand">Свято-Богоявленський<br>Кременецький монастир</div>' +
+      '<div class="brand">Свято-Богоявленський жіночий<br>Кременецький монастир</div>' +
       '<h1>Записки не знайдено</h1>' +
       '<p class="muted">Запис за номером <b>' + esc(code) + '</b> не знайдено. Можливо, минуло понад 7 днів або номер введено з помилкою.</p>' +
       '<div style="height:16px"></div>' + reqBlock +
@@ -194,7 +194,7 @@ export async function onRequestGet(context) {
   const wordNames = plural(nNames, "імʼя", "імені", "імен");
 
   const link = origin + "/z/" + (rec.code || code);
-  const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський Кременецький монастир). Номер: " + (rec.code || code) + ".";
+  const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський жіночий Кременецький монастир). Номер: " + (rec.code || code) + ".";
   const I = {
     tg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.9 19c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.9 12.9 2.3 11.5c-1-.3-1-1 .2-1.5l18.1-7c.8-.3 1.5.2 1.3 1.3z"/></svg>',
     vb: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.2 4 9.2c0 2.2 1.1 4.2 2.9 5.5v3.8c0 .5.6.8 1 .5l2.6-2c.5.1 1 .1 1.5.1 4.4 0 8-3.2 8-7.2S16.4 2 12 2zm4.6 9.6c-.2.5-.9.9-1.4 1-.4.1-.9.1-1.4-.1-.3-.1-.8-.3-1.4-.5-2.4-1-4-3.4-4.1-3.6-.1-.2-1-1.3-1-2.4s.6-1.7.8-1.9c.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.7 1.6c.1.1.1.3 0 .4l-.2.3-.3.3c-.1.1-.2.2-.1.4.1.2.5.9 1.1 1.4.8.7 1.4.9 1.6 1 .2.1.3.1.4-.1l.6-.7c.1-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.2.1.6 0 .9z"/></svg>',
@@ -219,7 +219,7 @@ export async function onRequestGet(context) {
 
   const inner =
     '<div class="wrap"><div class="card">' +
-    '<div class="brand">Свято-Богоявленський<br>Кременецький монастир</div>' +
+    '<div class="brand">Свято-Богоявленський жіночий<br>Кременецький монастир</div>' +
     '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +

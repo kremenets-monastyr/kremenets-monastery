@@ -217,7 +217,7 @@ function toast(t){var e=document.getElementById('toast');if(!e)return;e.textCont
 function resetAll(){sheets=[];uid=0;render();['phone','uname'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
 function copyTxt(t,el){try{navigator.clipboard.writeText(t).then(function(){var o=el.getAttribute('data-lbl')||el.textContent;el.setAttribute('data-lbl',o);el.textContent='Скопійовано \u2713';setTimeout(function(){el.textContent=o;},1500);});}catch(e){}}
 function krShareRow(code,link){
-  var t='Ваші записки до монастиря (Свято-Богоявленський Кременецький монастир). Номер: '+code+'.';
+  var t='Ваші записки до монастиря (Свято-Богоявленський жіночий Кременецький монастир). Номер: '+code+'.';
   var u=encodeURIComponent(link),te=encodeURIComponent(t),tu=encodeURIComponent(t+' '+link);
   var tg='https://t.me/share/url?url='+u+'&text='+te;
   var wa='https://wa.me/?text='+tu;

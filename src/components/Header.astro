@@ -8,19 +8,22 @@ const multi = ready.length > 1;
 <header class="xhead">
   <div class="xbar">
     <a class="xbrand" href="/"><img class="xlogo" src="/logo.png" alt="Герб обителі" width="50" height="50" />
-      <span class="xwm"><b>Свято-Богоявленський<br />Кременецький монастир</b></span></a>
+      <span class="xwm"><b>Свято-Богоявленський жіночий<br />Кременецький монастир</b></span></a>
     <nav class="xnav">
       {ready.map((n) => <a href={n.href} class={isOn(n.href) ? 'on' : ''}>{n.label}</a>)}
       <span class="xlangs">UK · EN</span>
     </nav>
-      <span class="kr-zoom" id="krZoom" role="group" aria-label="Розмір тексту">
-        <span class="kz-lbl">Розмір тексту</span>
-        <span class="kz-btns">
-          <button class="z1" data-z="1" title="Звичайний" aria-label="Звичайний розмір">A</button>
-          <button class="z2" data-z="2" title="Більший" aria-label="Більший розмір">A</button>
-          <button class="z3" data-z="3" title="Найбільший" aria-label="Найбільший розмір">A</button>
-        </span>
-      </span>
+      <div class="kr-zoom" id="krZoom">
+        <button class="kz-toggle" id="kzToggle" type="button" aria-expanded="false" aria-controls="kzPanel" aria-label="Розмір тексту" title="Розмір тексту">
+          <span class="kz-ic" aria-hidden="true"><b>A</b><i>A</i></span>
+        </button>
+        <div class="kz-panel" id="kzPanel" role="menu" aria-label="Розмір тексту">
+          <div class="kz-title">Розмір тексту</div>
+          <button class="kz-opt" role="menuitemradio" data-z="1" type="button"><span class="kz-a z1">A</span> Звичайний</button>
+          <button class="kz-opt" role="menuitemradio" data-z="2" type="button"><span class="kz-a z2">A</span> Більший</button>
+          <button class="kz-opt" role="menuitemradio" data-z="3" type="button"><span class="kz-a z3">A</span> Найбільший</button>
+        </div>
+      </div>
     {multi && (
       <button class="xburger" aria-label="Меню" onclick="document.getElementById('xmnav').classList.toggle('open')"><span></span><span></span><span></span></button>
     )}
