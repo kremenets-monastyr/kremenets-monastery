@@ -1,3 +1,4 @@
+import { renderCard, keyboard, getTopics, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
 /**
  * Cloudflare Pages Function — приймає записку з сайту, надсилає її у Telegram
  * і (за наявності KV) зберігає запис на 7 днів під унікальним номером.
@@ -113,30 +114,63 @@ export async function onRequestPost(context) {
 
   const code = genCode();
   const origin = new URL(request.url).origin;
-  const text = buildMessage(d, code) + "\n\ud83d\udd17 Записки: " + origin + "/z/" + code;
+
+  const record = {
+    code, ts: Date.now(), name, phone,
+    total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
+    sheets, origin, status: "new", notes: [],
+  };
 
   // 1) Доставка в Telegram — джерело правди. Без неї не підтверджуємо.
-  let tgOk = false;
+  const topics = await getTopics(env);
+  const thread = topics && topics.new;
+
+  let tgData = null;
   try {
     const tg = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: chat, text, parse_mode: "HTML", disable_web_page_preview: true }),
+      body: JSON.stringify({
+        chat_id: chat,
+        ...(thread ? { message_thread_id: thread } : {}),
+        text: renderCard(record),
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+        reply_markup: keyboard(record),
+      }),
     });
-    tgOk = tg.ok;
-  } catch (e) { tgOk = false; }
-  if (!tgOk) return json({ ok: false, error: "Не вдалося доставити записку. Спробуйте ще раз або зателефонуйте до обителі." }, 502);
+    if (tg.ok) tgData = await tg.json();
+  } catch (e) { tgData = null; }
+  if (!tgData || !tgData.ok) {
+    return json({ ok: false, error: "Не вдалося доставити записку. Спробуйте ще раз або зателефонуйте до обителі." }, 502);
+  }
+  record.msgId = tgData.result && tgData.result.message_id;
+  record.chatId = tgData.result && tgData.result.chat && tgData.result.chat.id;
+  if (thread) record.threadId = thread;
 
-  // 2) Збереження запису на 7 днів (best-effort: не валимо запит, якщо KV недоступний)
+  // 1б) Копія у старий канал-архів (якщо налаштовано TG_CHANNEL_ID).
+  // Це просто дублікат «як було»: без кнопок і статусів, лише для історії.
+  if (env.TG_CHANNEL_ID) {
+    try {
+      await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          chat_id: env.TG_CHANNEL_ID,
+          text: renderCard(record),
+          parse_mode: "HTML",
+          disable_web_page_preview: true,
+          disable_notification: true,
+        }),
+      });
+    } catch (e) { /* архівна копія не критична */ }
+  }
+
+  // 2) Збереження запису (best-effort: не валимо запит, якщо KV недоступний)
   if (env.RECORDS) {
     try {
-      const record = {
-        code, ts: Date.now(), name, phone,
-        total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
-        sheets, status: "new",
-      };
-      await env.RECORDS.put("z:" + code, JSON.stringify(record), { expirationTtl: TTL_SECONDS });
-    } catch (e) { /* запис у Telegram уже є — памʼятка просто буде без KV */ }
+      await env.RECORDS.put("z:" + code, JSON.stringify(record), { expirationTtl: CARD_TTL });
+    } catch (e) { /* запис у Telegram уже є */ }
   }
 
   return json({ ok: true, code });

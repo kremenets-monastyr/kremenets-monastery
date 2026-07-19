@@ -487,3 +487,6 @@ html,body{overflow-x:hidden}
 .pr-card ul.pr-list + p{margin-top:6px}
 .xfoot .xcopy a{color:#C2C8DC;text-decoration:underline}
 .xfoot .xcopy a:hover{color:#fff}
+
+.pr-short{background:var(--bg-soft);border-style:dashed}
+.pr-short p{font-size:14px;color:var(--muted);margin-bottom:0}

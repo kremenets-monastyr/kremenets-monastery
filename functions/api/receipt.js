@@ -1,3 +1,4 @@
+import { getRecord, saveRecord, placeCard } from "../_lib/card.js";
 /**
  * POST /api/receipt  (multipart/form-data: code, file)
  * Приймає квитанцію (скрін/фото/PDF) і надсилає її у Telegram-канал монастиря,
@@ -59,18 +60,35 @@ export async function onRequestPost(context) {
     const d = await tg.json();
     if (!tg.ok || !d.ok) return json({ ok: false, error: "Не вдалося надіслати. Спробуйте ще раз." }, 502);
 
-    // Позначимо в записі, що квитанцію отримано (best-effort)
-    if (env.RECORDS) {
-      try {
-        const raw = await env.RECORDS.get("z:" + code);
-        if (raw) {
-          const r = JSON.parse(raw);
-          r.receipt = true; r.receiptTs = Date.now();
-          const left = Math.max(60, Math.floor((r.ts + 7 * 24 * 3600 * 1000 - Date.now()) / 1000));
-          await env.RECORDS.put("z:" + code, JSON.stringify(r), { expirationTtl: left });
+    // Позначаємо квитанцію, переводимо картку в «Оплачено» і оновлюємо її в чаті
+    try {
+      const rec = await getRecord(env, code);
+      if (rec) {
+        rec.receipt = true;
+        rec.receiptTs = Date.now();
+        if (rec.status !== "paid") {
+          rec.status = "paid";
+          rec.paidTs = Date.now();
+          rec.paidAuto = true;   // підтверджено квитанцією від людини
         }
-      } catch (e) {}
+        await saveRecord(env, rec);
+        await placeCard(env, rec);
+      }
+    } catch (e) { /* квитанція вже в чаті — не критично */ }
+
+    // копія квитанції в канал-архів
+    if (env.TG_CHANNEL_ID) {
+      try {
+        const fd2 = new FormData();
+        fd2.append("chat_id", env.TG_CHANNEL_ID);
+        fd2.append("caption", caption);
+        fd2.append("parse_mode", "HTML");
+        fd2.append("disable_notification", "true");
+        fd2.append(field, file, file.name || (isImage ? "receipt.jpg" : "receipt.pdf"));
+        await fetch("https://api.telegram.org/bot" + token + "/" + method, { method: "POST", body: fd2 });
+      } catch (e) { /* не критично */ }
     }
+
     return json({ ok: true });
   } catch (e) {
     return json({ ok: false, error: "Помилка зʼєднання." }, 502);
