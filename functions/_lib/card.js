@@ -169,7 +169,10 @@ export function copyNames(rec) {
   (rec.sheets || []).forEach((s, idx) => {
     if (idx) lines.push("");
     if (TY[s.type]) lines.push(TY[s.type]);
-    if (s.trebaTitle) lines.push(s.trebaTitle);
+    // Повна назва треби: група + строк («Неусипна псалтир · 1 місяць»)
+    const g = s.trebaGroup && s.trebaGroup !== s.trebaTitle ? s.trebaGroup + " · " : "";
+    if (s.trebaTitle || g) lines.push((g + (s.trebaTitle || "")).trim());
+    if (s.when) lines.push("на " + s.when);
     (s.names || []).forEach((n) => lines.push(n));
   });
   const t = lines.join("\n") || String(rec.code || "");
