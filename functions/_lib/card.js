@@ -61,7 +61,7 @@ export function personName(from) {
 }
 
 /** Повний текст картки за збереженим записом */
-export function renderCard(rec) {
+function buildCard(rec, nameCap) {
   const TYPE = {
     living: { t: "ЗА ЗДОРОВ'Я", e: "🔴" },
     dead:   { t: "ЗА УПОКІЙ",   e: "🔵" },
@@ -82,7 +82,8 @@ export function renderCard(rec) {
     if (s.when) L.push("🗓 Коли: " + esc(String(s.when).slice(0, 120)));
     const names = Array.isArray(s.names) ? s.names : [];
     L.push("Імена (" + names.length + "):");
-    names.forEach((n, i) => {
+    const shown = nameCap && names.length > nameCap ? names.slice(0, nameCap) : names;
+    shown.forEach((n, i) => {
       if (isWarrior(n)) {
         freeTotal++;
         L.push("  " + (i + 1) + ". <u><b>" + esc(n) + "</b></u> 🕯 <i>безкоштовно</i>");
@@ -90,6 +91,10 @@ export function renderCard(rec) {
         L.push("  " + (i + 1) + ". " + esc(n));
       }
     });
+    if (nameCap && names.length > nameCap) {
+      L.push("  … ще " + (names.length - nameCap) + " імен — див. сторінку записки");
+      names.slice(nameCap).forEach((n) => { if (isWarrior(n)) freeTotal++; });
+    }
     if (s.sum == null) { hasDon = true; L.push("Сума: на пожертву"); }
     else { total += Number(s.sum) || 0; L.push("Сума: " + money(s.sum)); }
   });
@@ -124,9 +129,29 @@ export function renderCard(rec) {
     });
   }
 
+  // Синодик — блок коду: Telegram показує кнопку копіювання, довжина не обмежена
+  const syn = copyNames(rec);
+  if (syn) {
+    const block = "━━━━━━━━━━━━\n<b>Для синодика</b> (натисніть, щоб скопіювати):\n<pre>" + esc(syn) + "</pre>";
+    // Telegram обмежує повідомлення 4096 знаками — стежимо, щоб картка вмістилась
+    if (L.join("\n").length + block.length < 3800) L.push(block);
+  }
+
   L.push("");
   L.push(st.tag + " #" + String(rec.code || "").replace(/[^A-Za-z0-9]/g, "") + (freeTotal ? " #воїни" : ""));
   return L.join("\n");
+}
+
+/**
+ * Картка з гарантією, що повідомлення вміститься в ліміт Telegram (4096 знаків).
+ * Якщо імен дуже багато — показуємо перші, решту дивляться на сторінці записки.
+ */
+export function renderCard(rec) {
+  for (const cap of [0, 12, 6, 3]) {          // 0 = без обмеження
+    const t = buildCard(rec, cap);
+    if (t.length <= 3900) return t;
+  }
+  return buildCard(rec, 2).slice(0, 3900);
 }
 
 /** Дописати подію в історію записки */
@@ -156,8 +181,7 @@ export function keyboard(rec) {
   if (cur !== "new") rows.push([B("new", "↩︎ Повернути в нові")]);
 
   rows.push([
-    { text: "📋 Імена", copy_text: { text: copyNames(rec) } },
-    { text: "📞 Телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
+    { text: "📞 Копіювати телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
   ]);
   return { inline_keyboard: rows };
 }
@@ -176,7 +200,7 @@ export function copyNames(rec) {
     (s.names || []).forEach((n) => lines.push(n));
   });
   const t = lines.join("\n") || String(rec.code || "");
-  return t.length > 256 ? t.slice(0, 253) + "…" : t;   // Telegram обмежує 256 знаками
+  return t.length > 2500 ? t.slice(0, 2497) + "…" : t;
 }
 
 export async function tg(env, method, payload) {
