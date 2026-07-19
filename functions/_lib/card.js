@@ -61,7 +61,7 @@ export function personName(from) {
 }
 
 /** Повний текст картки за збереженим записом */
-function buildCard(rec, nameCap) {
+function buildCard(rec, nameCap, expandable) {
   const TYPE = {
     living: { t: "ЗА ЗДОРОВ'Я", e: "🔴" },
     dead:   { t: "ЗА УПОКІЙ",   e: "🔵" },
@@ -132,7 +132,10 @@ function buildCard(rec, nameCap) {
   // Синодик — блок коду: Telegram показує кнопку копіювання, довжина не обмежена
   const syn = copyNames(rec);
   if (syn) {
-    const block = "━━━━━━━━━━━━\n<b>Для синодика</b> (натисніть, щоб скопіювати):\n<pre>" + esc(syn) + "</pre>";
+    const inner = "<pre>" + esc(syn) + "</pre>";
+    const block = expandable
+      ? "━━━━━━━━━━━━\n<b>Для синодика</b> — розгорніть і натисніть, щоб скопіювати:\n<blockquote expandable>" + inner + "</blockquote>"
+      : "━━━━━━━━━━━━\n<b>Для синодика</b> (натисніть, щоб скопіювати):\n" + inner;
     // Telegram обмежує повідомлення 4096 знаками — стежимо, щоб картка вмістилась
     if (L.join("\n").length + block.length < 3800) L.push(block);
   }
@@ -146,12 +149,13 @@ function buildCard(rec, nameCap) {
  * Картка з гарантією, що повідомлення вміститься в ліміт Telegram (4096 знаків).
  * Якщо імен дуже багато — показуємо перші, решту дивляться на сторінці записки.
  */
-export function renderCard(rec) {
+export function renderCard(rec, expandable) {
+  const exp = expandable !== false;
   for (const cap of [0, 12, 6, 3]) {          // 0 = без обмеження
-    const t = buildCard(rec, cap);
+    const t = buildCard(rec, cap, exp);
     if (t.length <= 3900) return t;
   }
-  return buildCard(rec, 2).slice(0, 3900);
+  return buildCard(rec, 2, exp).slice(0, 3900);
 }
 
 /** Дописати подію в історію записки */
@@ -203,6 +207,17 @@ export function copyNames(rec) {
   return t.length > 2500 ? t.slice(0, 2497) + "…" : t;
 }
 
+/**
+ * Надіслати/оновити картку. Якщо Telegram не прийме згортану цитату
+ * (старіша версія API), автоматично повторюємо без неї.
+ */
+export async function tgCard(env, method, base, rec) {
+  let r = await tg(env, method, { ...base, text: renderCard(rec, true), parse_mode: "HTML" });
+  const bad = r && !r.ok && /parse entities|can't parse|unsupported/i.test(String(r.description || ""));
+  if (bad) r = await tg(env, method, { ...base, text: renderCard(rec, false), parse_mode: "HTML" });
+  return r;
+}
+
 export async function tg(env, method, payload) {
   const r = await fetch("https://api.telegram.org/bot" + env.TG_BOT_TOKEN + "/" + method, {
     method: "POST",
@@ -230,14 +245,12 @@ export async function saveRecord(env, rec) {
 /** Перемалювати картку в Telegram за збереженим записом */
 export async function refreshCard(env, rec) {
   if (!rec || !rec.msgId || !rec.chatId) return;
-  await tg(env, "editMessageText", {
+  await tgCard(env, "editMessageText", {
     chat_id: rec.chatId,
     message_id: rec.msgId,
-    text: renderCard(rec),
-    parse_mode: "HTML",
     disable_web_page_preview: true,
     reply_markup: keyboard(rec),
-  });
+  }, rec);
 }
 
 
@@ -286,14 +299,12 @@ export async function placeCard(env, rec) {
   if (rec.threadId && rec.threadId === thread) { await refreshCard(env, rec); return; }
 
   const oldMsg = rec.msgId;
-  const res = await tg(env, "sendMessage", {
+  const res = await tgCard(env, "sendMessage", {
     chat_id: rec.chatId,
     message_thread_id: thread,
-    text: renderCard(rec),
-    parse_mode: "HTML",
     disable_web_page_preview: true,
     reply_markup: keyboard(rec),
-  });
+  }, rec);
 
   if (res && res.ok && res.result) {
     rec.msgId = res.result.message_id;

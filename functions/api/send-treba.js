@@ -1,4 +1,4 @@
-import { renderCard, keyboard, getTopics, addLog, isWarrior as isWarriorSrv, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
+import { renderCard, keyboard, getTopics, addLog, tgCard, isWarrior as isWarriorSrv, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
 /**
  * Cloudflare Pages Function — приймає записку з сайту, надсилає її у Telegram
  * і (за наявності KV) зберігає запис на 7 днів під унікальним номером.
@@ -137,20 +137,14 @@ export async function onRequestPost(context) {
 
   let tgData = null;
   try {
-    const tg = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chat,
-        ...(thread ? { message_thread_id: thread } : {}),
-        text: renderCard(record),
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-        reply_markup: keyboard(record),
-      }),
-    });
-    if (tg.ok) tgData = await tg.json();
+    tgData = await tgCard(env, "sendMessage", {
+      chat_id: chat,
+      ...(thread ? { message_thread_id: thread } : {}),
+      disable_web_page_preview: true,
+      reply_markup: keyboard(record),
+    }, record);
   } catch (e) { tgData = null; }
+
   if (!tgData || !tgData.ok) {
     return json({ ok: false, error: "Не вдалося доставити записку. Спробуйте ще раз або зателефонуйте до обителі." }, 502);
   }
