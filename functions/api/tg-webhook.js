@@ -6,7 +6,7 @@
  * Захист: Telegram надсилає секрет у заголовку X-Telegram-Bot-Api-Secret-Token.
  * Секрет зберігається в змінній TG_WEBHOOK_SECRET.
  */
-import { STATUS, personName, getRecord, saveRecord, refreshCard, placeCard, createTopics, getTopics, addLog, tg } from "../_lib/card.js";
+import { STATUS, personName, getRecord, saveRecord, refreshCard, placeCard, createTopics, getTopics, addLog, copyNames, tg } from "../_lib/card.js";
 
 function ok() {
   return new Response("ok", { status: 200 });
@@ -29,7 +29,30 @@ export async function onRequestPost(context) {
   if (upd.callback_query) {
     const cq = upd.callback_query;
     const data = String(cq.data || "");
-    const parts = data.split(":"); // s:<code>:<status>
+    const parts = data.split(":"); // s:<code>:<status>  або  syn:<code>
+
+    // Синодик окремим повідомленням — щоб на телефоні можна було скопіювати
+    if (parts[0] === "syn" && parts[1]) {
+      const rec = await getRecord(env, parts[1]);
+      if (rec) {
+        const txt = copyNames(rec);
+        for (let i = 0; i < txt.length; i += 3500) {
+          await tg(env, "sendMessage", {
+            chat_id: rec.chatId || (cq.message && cq.message.chat && cq.message.chat.id),
+            ...(rec.threadId ? { message_thread_id: rec.threadId } : {}),
+            reply_to_message_id: rec.msgId,
+            text: txt.slice(i, i + 3500),
+            disable_notification: true,
+          });
+        }
+      }
+      await tg(env, "answerCallbackQuery", {
+        callback_query_id: cq.id,
+        text: "Надіслано окремим повідомленням — утримайте його й натисніть «Копіювати».",
+        show_alert: true,
+      });
+      return ok();
+    }
 
     if (parts[0] === "s" && parts[1] && STATUS[parts[2]]) {
       const code = parts[1], next = parts[2];

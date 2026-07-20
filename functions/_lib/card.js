@@ -202,6 +202,12 @@ export function keyboard(rec) {
   if (row2.length) rows.push(row2);
   if (cur !== "new") rows.push([B("new", "↩︎ Повернути в нові")]);
 
+  const syn = copyNames(rec);
+  rows.push(
+    syn.length <= 256
+      ? [{ text: "📋 Копіювати записку", copy_text: { text: syn } }]
+      : [{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]
+  );
   rows.push([
     { text: "📞 Копіювати телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
   ]);
