@@ -36,6 +36,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .sh-n{list-style:none;font-size:15px;margin-bottom:6px}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
+.sh-n li{overflow-wrap:anywhere;word-break:break-word}
 .warr{background:#FFF7E6;border-radius:6px;padding:2px 6px}
 .freetag{font-size:11px;color:#8A6D1F;white-space:nowrap}
 .sh-w{font-size:13px;color:var(--blue);background:var(--bg);border-radius:8px;padding:5px 8px;margin-bottom:6px;display:inline-block}

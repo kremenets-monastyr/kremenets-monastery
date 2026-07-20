@@ -36,6 +36,12 @@ export const TOPICS = [
   { key: "arch",  name: "📦 Архів",            color: 0xCB86DB },
 ];
 
+/** Скорочення задовгого тексту для показу в картці */
+export function cut(s, n) {
+  const t = String(s == null ? "" : s).trim();
+  return t.length > n ? t.slice(0, n - 1) + "…" : t;
+}
+
 export function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -77,18 +83,19 @@ function buildCard(rec, nameCap, expandable) {
     const ty = TYPE[s.type] || { t: "—", e: "•" };
     L.push("━━━━━━━━━━━━");
     L.push(ty.e + " <b>" + ty.t + "</b>");
-    const g = (s.trebaGroup && s.trebaGroup !== s.trebaTitle) ? esc(s.trebaGroup) + " · " : "";
-    L.push("Треба: " + g + esc(s.trebaTitle || ""));
-    if (s.when) L.push("🗓 Коли: " + esc(String(s.when).slice(0, 120)));
+    const g = (s.trebaGroup && s.trebaGroup !== s.trebaTitle) ? esc(cut(s.trebaGroup, 60)) + " · " : "";
+    L.push("Треба: " + g + esc(cut(s.trebaTitle, 80)));
+    if (s.when) L.push("🗓 Коли: " + esc(cut(s.when, 60)));
     const names = Array.isArray(s.names) ? s.names : [];
     L.push("Імена (" + names.length + "):");
     const shown = nameCap && names.length > nameCap ? names.slice(0, nameCap) : names;
     shown.forEach((n, i) => {
+      const nm = cut(n, 70);
       if (isWarrior(n)) {
         freeTotal++;
-        L.push("  " + (i + 1) + ". <u><b>" + esc(n) + "</b></u> 🕯 <i>безкоштовно</i>");
+        L.push("  " + (i + 1) + ". <u><b>" + esc(nm) + "</b></u> 🕯 <i>безкоштовно</i>");
       } else {
-        L.push("  " + (i + 1) + ". " + esc(n));
+        L.push("  " + (i + 1) + ". " + esc(nm));
       }
     });
     if (nameCap && names.length > nameCap) {
@@ -104,8 +111,8 @@ function buildCard(rec, nameCap, expandable) {
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
   L.push("💳 <b>Разом:</b> " + (tot || "—"));
   if (freeTotal) L.push("🕯 <b>Воїнів (безкоштовно):</b> " + freeTotal);
-  L.push("👤 <b>Ім’я:</b> " + esc(rec.name || "—"));
-  L.push("📞 <b>Телефон:</b> " + esc(rec.phone || "—"));
+  L.push("👤 <b>Ім’я:</b> " + esc(cut(rec.name, 60) || "—"));
+  L.push("📞 <b>Телефон:</b> " + esc(cut(rec.phone, 30) || "—"));
   if (rec.origin) L.push("🔗 Записки: " + rec.origin + "/z/" + rec.code);
 
   // Позначки й додаткові відомості
@@ -155,7 +162,17 @@ export function renderCard(rec, expandable) {
     const t = buildCard(rec, cap, exp);
     if (t.length <= 3900) return t;
   }
-  return buildCard(rec, 2, exp).slice(0, 3900);
+  // Крайній випадок: прибираємо рядки з кінця, щоб не розрізати розмітку
+  const lines = buildCard(rec, 2, false).split("\n");
+  const tail = lines[lines.length - 1];
+  const out = [];
+  let len = 0;
+  for (const ln of lines) {
+    if (len + ln.length + 120 > 3900) { out.push("… далі — на сторінці записки"); break; }
+    out.push(ln); len += ln.length + 1;
+  }
+  out.push("", tail);
+  return out.join("\n");
 }
 
 /** Дописати подію в історію записки */
@@ -197,11 +214,11 @@ export function copyNames(rec) {
   (rec.sheets || []).forEach((s, idx) => {
     if (idx) lines.push("");
     if (TY[s.type]) lines.push(TY[s.type]);
-    // Повна назва треби: група + строк («Неусипна псалтир · 1 місяць»)
+    // Повна назва треби: група + термін («Неусипна псалтир · 1 місяць»)
     const g = s.trebaGroup && s.trebaGroup !== s.trebaTitle ? s.trebaGroup + " · " : "";
     if (s.trebaTitle || g) lines.push((g + (s.trebaTitle || "")).trim());
     if (s.when) lines.push("на " + s.when);
-    (s.names || []).forEach((n) => lines.push(n));
+    (s.names || []).forEach((n) => lines.push(cut(n, 70)));
   });
   const t = lines.join("\n") || String(rec.code || "");
   return t.length > 2500 ? t.slice(0, 2497) + "…" : t;

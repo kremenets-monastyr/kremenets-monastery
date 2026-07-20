@@ -110,16 +110,19 @@ function setTreba(id,n){
   if(s.names.length>lim){ s.names=s.names.slice(0,lim); toast('У цій требі — до '+DONATION_MAX+' імен. Зайві імена прибрано.'); }
   render();
 }
-function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=v;}
+function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=String(v||'').slice(0,WHEN_MAX);}
 function setName(id,i,v){
   const s=sheets.find(x=>x.id===id);
+  if(v&&v.length>NAME_MAX)v=v.slice(0,NAME_MAX);
   const was=isWarrior(s.names[i]);
   s.names[i]=v;
   if(was!==isWarrior(v)){ render(); const el=document.querySelector('#sheet-'+id+' .nrow:nth-of-type('+(i+1)+') input'); if(el){el.focus();el.setSelectionRange(v.length,v.length);} return; }
   updateSheetSum(s);computeTotals();
 }
 function updateSheetSum(s){const sm=sheetSum(s),txt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);const el=document.querySelector('#sheet-'+s.id+' .sum');if(el)el.textContent=txt;}
-var DONATION_MAX = 20; // ліміт імен для треби «За 1 записку» (на пожертву)
+var DONATION_MAX = 20;
+var NAME_MAX = 70;      // максимальна довжина одного імені з приписками
+var WHEN_MAX = 60;      // максимальна довжина поля «на яке число» // ліміт імен для треби «За 1 записку» (на пожертву)
 function trebaOf(s){ return s.treba!=null ? TREBY.find(x=>x.n===s.treba) : null; }
 function nameLimit(s){ const tr=trebaOf(s); return (tr&&tr.maxNames) ? tr.maxNames : Infinity; }
 function asksWhen(s){ const tr=trebaOf(s); return !!(tr&&tr.askWhen); }
@@ -138,15 +141,15 @@ function isWarrior(name){
   if(/(^|[\s,;(])в\.(\s|$)/.test(s))return true;
   return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
 }
-/* Воїнів обитель приймає на строк до 1 місяця (40 днів).
-   На довших требах безкоштовне поминання не діє — треба подати заново, коли строк вийде. */
+/* Воїнів обитель приймає на термін до 1 місяця (40 днів).
+   На довших требах безкоштовне поминання не діє — треба подати заново, коли термін вийде. */
 function isLongTerm(title){ return /(3\s*місяц|6\s*місяц|1\s*рік|5\s*рок)/i.test(String(title||'')); }
 function trebaLong(s){ const tr=trebaOf(s); return !!(tr && (tr.long || isLongTerm(tr.t))); }
-/* Воїнів поминаємо безкоштовно завжди: за упокій — на будь-який строк,
+/* Воїнів поминаємо безкоштовно завжди: за упокій — на будь-який термін,
    за здоровʼя — до 1 місяця (довші треби взагалі не приймаються, див. warriorTooLong). */
 function warriorFree(s,nm){ return isWarrior(nm); }
 
-/* За здоровʼя воїнів обитель приймає на строк до 1 місяця (40 днів).
+/* За здоровʼя воїнів обитель приймає на термін до 1 місяця (40 днів).
    Довші треби для воїнів не приймаються — треба подати наново після завершення. */
 function warriorTooLong(s){
   return s.type==='living' && trebaLong(s) && s.names.some(n=>isWarrior(n));
@@ -181,17 +184,17 @@ function render(){
       const isW=isWarrior(nm), free=warriorFree(s,nm), late=isW&&!free;
       const tag = free ? '<span class="wfree">безкоштовно</span>'
                 : late ? '<span class="wlong">лише до 1 місяця</span>' : '';
-      return `<div class="nrow${free?' warrior':''}${late?' warrior-long':''}"><span class="nnum">${i+1}</span><input value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)">${tag}<button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`;
+      return `<div class="nrow${free?' warrior':''}${late?' warrior-long':''}"><span class="nnum">${i+1}</span><input maxlength="${NAME_MAX}" value="${nm.replace(/"/g,'&quot;')}" placeholder="${i===0?ph0:'імʼя з приписками'}" oninput="setName(${s.id},${i},this.value)">${tag}<button class="del" onclick="delName(${s.id},${i})">видалити</button></div>`;
     }).join('');
     const el=document.createElement('div');el.className='zap '+TYPE[s.type].cls;el.id='sheet-'+s.id;el.setAttribute('onclick','cardClick(event,'+s.id+')');
     el.innerHTML=`<button class="x" onclick="removeSheet(${s.id})">видалити</button>
       <div class="zhead"><div class="cr">${CROSS}</div><div class="ttl">${TYPE[s.type].ttl}</div></div>
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
-      ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
+      ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" maxlength="${WHEN_MAX}" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
       <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div>${warriorTooLong(s)
-  ? '<div class="warr-note warr-stop">⚠️ <b>За здоровʼя воїнів приймаємо на строк до 1 місяця (40 днів).</b> Оберіть «1 день», «40 днів · сорокоуст» або «1 місяць». Коли строк вийде, попросимо подати записку знову.</div>'
-  : '<div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис: «воїн», «в.», «полоненого», «безвісти зниклого». За здоровʼя — на строк до 1 місяця (40 днів), за упокій — на будь-який строк.</div>'}</div>
+  ? '<div class="warr-note warr-stop">⚠️ <b>За здоровʼя воїнів приймаємо на термін до 1 місяця (40 днів).</b> Оберіть «1 день», «40 днів · сорокоуст» або «1 місяць». Коли термін вийде, попросимо подати записку знову.</div>'
+  : '<div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис: «воїн», «в.», «полоненого», «безвісти зниклого». За здоровʼя — на термін до 1 місяця (40 днів), за упокій — на будь-який термін.</div>'}</div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;
     box.appendChild(el);
   });
@@ -244,7 +247,7 @@ function computeTotals(){
 function warriorBlock(){
   const bad=sheets.filter(s=>warriorTooLong(s));
   if(!bad.length)return null;
-  return 'За здоровʼя воїнів приймаємо на строк до 1 місяця (40 днів). Змініть требу в записці.';
+  return 'За здоровʼя воїнів приймаємо на термін до 1 місяця (40 днів). Змініть требу в записці.';
 }
 function buildPayload(){
   const filled=sheets.filter(s=>s.treba!=null&&s.names.some(n=>n.trim()));
@@ -330,7 +333,7 @@ function showConfirm(code){
 var KR_RULES_HTML =
   '<div class="krm-b">'
   +'<div class="krm-warn"><b>Найважливіше.</b> Богослужбове поминання в нашій обителі звершується за православних християн, які перебувають у <b>євхаристійному спілкуванні з Українською Православною Церквою</b>.</div>'
-  +'<p>Якщо ви або той, за кого подаєте записку, належите до церковної спільноти, яка <b>не перебуває у спілкуванні з нашою Церквою</b>, — прийняти записку на богослужбове поминання не можна. Це особливо стосується <b>проскомідії та сорокоуста</b>: часточка, вийнята за людину, занурюється в Чашу з Кровʼю Христовою, і це означає єдність у Церкві.</p>'
+  +'<p>Якщо ви або той, за кого подаєте записку, належите до церковної спільноти, яка <b>не перебуває у спілкуванні з нашою Церквою</b>, — прийняти записку на богослужбове поминання не можна. Це особливо стосується <b>проскомідії та сорокоуста</b>: часточка, вийнята за людину, погружається в Чашу з Кровʼю Христовою, і це означає єдність у Церкві.</p>'
   +'<p>За канонами в храмі також <b>не поминають</b> нехрещених, іновірців і тих, хто свідомо позбавив себе життя. Це не осуд людини — суд належить лише Богові, — а устав Церкви.</p>'
   +'<p class="krm-n">Не певні, чи можна подати за когось із рідних? <b>Порадьтеся зі священником обителі</b> перед поданням — вам спокійно пояснять. За тих, кого не поминають у храмі, можна і треба молитися вдома, келійно, творити милостиню.</p>'
   +'<p class="krm-l">Докладніше — <a href="/pravyla" target="_blank" rel="noopener">як подавати записки</a>.</p>'
