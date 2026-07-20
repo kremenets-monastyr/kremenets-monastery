@@ -44,6 +44,10 @@ export async function onRequestPost(context) {
   }
 
   const caption = "🧾 <b>Квитанція про пожертву</b>\n№" + esc(code) + who;
+
+  // Куди саме класти фото: у тему записки й відповіддю на її картку
+  let rec = null;
+  try { rec = await getRecord(env, code); } catch (e) { rec = null; }
   const type = String(file.type || "");
   const isImage = type.indexOf("image/") === 0;
   const method = isImage ? "sendPhoto" : "sendDocument";
@@ -53,6 +57,8 @@ export async function onRequestPost(context) {
   fd.append("chat_id", chat);
   fd.append("caption", caption);
   fd.append("parse_mode", "HTML");
+  if (rec && rec.threadId) fd.append("message_thread_id", String(rec.threadId));
+  if (rec && rec.msgId) fd.append("reply_to_message_id", String(rec.msgId));
   fd.append(field, file, file.name || (isImage ? "receipt.jpg" : "receipt.pdf"));
 
   try {
@@ -62,7 +68,6 @@ export async function onRequestPost(context) {
 
     // Позначаємо квитанцію, переводимо картку в «Оплачено» і оновлюємо її в чаті
     try {
-      const rec = await getRecord(env, code);
       if (rec) {
         rec.receipt = true;
         rec.receiptTs = Date.now();
