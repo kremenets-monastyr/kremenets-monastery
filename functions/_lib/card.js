@@ -140,7 +140,7 @@ function buildCard(rec, nameCap, expandable) {
   // Синодик — блок коду: Telegram показує кнопку копіювання, довжина не обмежена
   const syn = copyNames(rec);
   if (syn) {
-    const inner = "<pre>" + esc(syn) + "</pre>";
+    const inner = '<pre><code class="language-Записка">' + esc(syn) + "</code></pre>";
     const block = expandable
       ? "━━━━━━━━━━━━\n<b>Для синодика</b> — розгорніть і натисніть, щоб скопіювати:\n<blockquote expandable>" + inner + "</blockquote>"
       : "━━━━━━━━━━━━\n<b>Для синодика</b> (натисніть, щоб скопіювати):\n" + inner;
