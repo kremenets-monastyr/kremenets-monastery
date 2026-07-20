@@ -36,6 +36,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .sh-n{list-style:none;font-size:15px;margin-bottom:6px}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
+.ucm{font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0}
 .sh-n li{overflow-wrap:anywhere;word-break:break-word}
 .warr{background:#FFF7E6;border-radius:6px;padding:2px 6px}
 .freetag{font-size:11px;color:#8A6D1F;white-space:nowrap}
@@ -253,6 +254,7 @@ export async function onRequestGet(context) {
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + receiptBlock + '</div>' +
     shareBlock +
+    (rec.comment ? '<p class="ucm"><b>Ваш коментар:</b> ' + esc(rec.comment) + '</p>' : '') +
     '<p class="note">У призначенні платежу (коментарі) напишіть: <b>пожертва ' + esc(rec.code || code) + '</b>.<br>' +
     'Якщо коментар додати не вдається — назвіть номер або ваше імʼя й телефон обителі.<br>Сторінка доступна 7 днів від подання записки.</p>' +
     '<details class="acc"><summary class="acc-h"><span>Переглянути записки</span>' +

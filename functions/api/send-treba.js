@@ -140,6 +140,7 @@ export async function onRequestPost(context) {
   const record = {
     code, ts: Date.now(), name, phone,
     total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
+    comment: String(d.comment || "").trim().slice(0, 300),
     sheets, origin, status: "new", log: [],
   };
 

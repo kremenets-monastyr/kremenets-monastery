@@ -113,6 +113,7 @@ function buildCard(rec, nameCap, expandable) {
   if (freeTotal) L.push("🕯 <b>Воїнів (безкоштовно):</b> " + freeTotal);
   L.push("👤 <b>Ім’я:</b> " + esc(cut(rec.name, 60) || "—"));
   L.push("📞 <b>Телефон:</b> " + esc(cut(rec.phone, 30) || "—"));
+  if (rec.comment) L.push("✉️ <b>Коментар:</b> " + esc(cut(rec.comment, 300)));
   if (rec.origin) L.push("🔗 Записки: " + rec.origin + "/z/" + rec.code);
 
   // Позначки й додаткові відомості
