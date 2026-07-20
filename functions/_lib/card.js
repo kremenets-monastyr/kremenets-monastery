@@ -140,10 +140,8 @@ function buildCard(rec, nameCap, expandable) {
   // Синодик — блок коду: Telegram показує кнопку копіювання, довжина не обмежена
   const syn = copyNames(rec);
   if (syn) {
-    const inner = '<pre><code class="language-Записка">' + esc(syn) + "</code></pre>";
-    const block = expandable
-      ? "━━━━━━━━━━━━\n<b>Для синодика</b> — розгорніть і натисніть, щоб скопіювати:\n<blockquote expandable>" + inner + "</blockquote>"
-      : "━━━━━━━━━━━━\n<b>Для синодика</b> (натисніть, щоб скопіювати):\n" + inner;
+    const block = "━━━━━━━━━━━━\n<b>Для синодика:</b>\n" +
+      '<pre><code class="language-Записка">' + esc(syn) + "</code></pre>";
     // Telegram обмежує повідомлення 4096 знаками — стежимо, щоб картка вмістилась
     if (L.join("\n").length + block.length < 3800) L.push(block);
   }
@@ -202,12 +200,10 @@ export function keyboard(rec) {
   if (row2.length) rows.push(row2);
   if (cur !== "new") rows.push([B("new", "↩︎ Повернути в нові")]);
 
-  const syn = copyNames(rec);
-  rows.push(
-    syn.length <= 256
-      ? [{ text: "📋 Копіювати записку", copy_text: { text: syn } }]
-      : [{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]
-  );
+  // Якщо синодик не вмістився в картку — даємо кнопку, щоб надіслати його окремо
+  if (!renderCard(rec).includes("<pre>")) {
+    rows.push([{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]);
+  }
   rows.push([
     { text: "📞 Копіювати телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
   ]);
