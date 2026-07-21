@@ -53,12 +53,24 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .req.step1{border:2px solid #C79A3B;background:#FFFCF5}
 .req.step1 .step-tag{background:#C79A3B;color:#fff}
 .rc.step2{border:2px solid #2E7D5B;background:#F5FBF8}
+.dn{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;text-align:center;background:#fff}
+.dn-t{font-weight:700;color:var(--blue);margin-bottom:6px}
+.dn-p{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 12px}
+.dn-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.dn-b{font-family:inherit;font-size:14px;font-weight:600;color:var(--blue);background:var(--bg);border:1.5px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;transition:.15s}
+.dn-b:hover{border-color:var(--blue)}
+.dn-b.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.dn-i{width:96px;font-family:inherit;font-size:14px;text-align:center;border:1.5px solid var(--line);border-radius:999px;padding:9px 12px;background:var(--bg);color:var(--ink)}
+.dn-i:focus{outline:none;border-color:var(--blue);background:#fff}
+.dn-has{font-size:13px;color:#2E7D5B;margin-top:10px}
+.dn-msg{font-size:13px;margin-top:8px}
+.dn-msg.ok{color:#2E7D5B}.dn-msg.err{color:#8A2B2B}
 .filebtn{display:inline-block;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#2E7D5B;background:#fff;border:1.5px solid #2E7D5B;border-radius:999px;padding:10px 18px;margin:2px 0 8px;transition:.15s}
 .filebtn:hover{background:#2E7D5B;color:#fff}
 .filename{font-size:13px;color:var(--muted);margin-bottom:10px;word-break:break-all}
 .rc.step2 .step-tag{background:#2E7D5B;color:#fff}
 @media print{
-  .tohome,.share,.rc,.btn,.acc-x,.note{display:none!important}
+  .tohome,.share,.rc,.dn,.btn,.acc-x,.note{display:none!important}
   body{background:#fff}
   .card{box-shadow:none;border:none;padding:0}
   .acc{display:block!important}
@@ -147,6 +159,37 @@ var cp = document.getElementById('cpLink');
 if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(LINK); cp.classList.add('copied'); setTimeout(function(){cp.classList.remove('copied');},1400); });
 var rq = document.querySelector('.req .btn2');
 if (rq) rq.addEventListener('click', function(){ var o=rq.textContent; rq.textContent='Скопійовано \u2713'; setTimeout(function(){rq.textContent=o;},1500); });
+(function(){
+  var pick=null, box=document.getElementById('dnMsg'), other=document.getElementById('dnOther'), go=document.getElementById('dnSend');
+  if(!go)return;
+  document.querySelectorAll('.dn-b').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.dn-b').forEach(function(x){x.classList.remove('on');});
+      btn.classList.add('on'); pick=Number(btn.dataset.v); if(other)other.value='';
+    });
+  });
+  if(other)other.addEventListener('input',function(){
+    document.querySelectorAll('.dn-b').forEach(function(x){x.classList.remove('on');});
+    pick=Number(other.value)||null;
+  });
+  go.addEventListener('click',async function(){
+    var amount=pick||Number(other&&other.value)||0;
+    if(!(amount>0)){ box.textContent='Оберіть або впишіть суму'; box.className='dn-msg err'; return; }
+    go.disabled=true; box.textContent='Записуємо…'; box.className='dn-msg';
+    try{
+      var r=await fetch('/api/donation',{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({code:__CODE__,amount:amount})});
+      var d=await r.json();
+      if(d.ok){
+        box.textContent='Дякуємо! Додайте цю суму до переказу за реквізитами.'; box.className='dn-msg ok';
+        var has=document.getElementById('dnHas');
+        if(has){ has.hidden=false; has.innerHTML='Уже додано: <b>'+d.extra+' грн</b>'; }
+      } else { box.textContent=d.error||'Не вдалося записати'; box.className='dn-msg err'; }
+    }catch(e){ box.textContent='Немає звʼязку. Спробуйте ще раз.'; box.className='dn-msg err'; }
+    go.disabled=false;
+  });
+})();
+
 var f=document.getElementById('rcFile'), b=document.getElementById('rcSend'), m=document.getElementById('rcMsg');
 var nameBox=document.getElementById('rcName');
 if(f&&nameBox){f.addEventListener('change',function(){nameBox.textContent=f.files&&f.files[0]?f.files[0].name:'Файл не вибрано';});}
@@ -283,6 +326,17 @@ export async function onRequestGet(context) {
     '<button class="btn2" id="rcSend">Надіслати квитанцію</button>' +
     '<div class="rc-msg" id="rcMsg"></div></div>';
 
+  const donateBlock =
+    '<div class="dn"><div class="dn-t">⛪ Додати пожертву на обитель</div>' +
+    '<p class="dn-p">За бажанням можете додати до переказу будь-яку суму — на свічки, олію, ремонт храму чи потреби сестер.</p>' +
+    '<div class="dn-row">' +
+      ['50','100','200','500'].map(function(v){ return '<button class="dn-b" data-v="' + v + '">' + v + ' грн</button>'; }).join('') +
+      '<input class="dn-i" id="dnOther" type="number" min="1" max="100000" inputmode="numeric" placeholder="інша">' +
+    '</div>' +
+    '<button class="btn2 dn-go" id="dnSend">Додати до пожертви</button>' +
+    (rec.extra ? '<div class="dn-has">Уже додано: <b>' + esc(String(rec.extra)) + ' грн</b></div>' : '<div class="dn-has" id="dnHas" hidden></div>') +
+    '<div class="dn-msg" id="dnMsg"></div></div>';
+
   const inner =
     '<div class="wrap"><div class="card">' +
     '<a class="tohome" href="' + origin + '/">← На головну</a>' +
@@ -293,6 +347,7 @@ export async function onRequestGet(context) {
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + receiptBlock + '</div>' +
+    donateBlock +
     shareBlock +
     (rec.comment ? '<p class="ucm"><b>Ваш коментар:</b> ' + esc(rec.comment) + '</p>' : '') +
     '<p class="note">У призначенні платежу (коментарі) напишіть: <b>пожертва ' + esc(rec.code || code) + '</b>.<br>' +

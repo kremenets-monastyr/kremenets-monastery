@@ -129,7 +129,11 @@ function buildCard(rec, nameCap, expandable) {
   L.push("━━━━━━━━━━━━");
   let tot = total > 0 ? money(total) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
-  L.push("💳 <b>Разом:</b> " + (tot || "—"));
+  L.push("💳 <b>Разом за требами:</b> " + (tot || "—"));
+  if (rec.extra) {
+    L.push("⛪ <b>Додаткова пожертва:</b> " + money(rec.extra));
+    if (total > 0) L.push("💳 <b>Загалом до сплати:</b> " + money(total + Number(rec.extra)));
+  }
   if (freeTotal) L.push("🕯 <b>Воїнів (безкоштовно):</b> " + freeTotal);
   L.push("👤 <b>Ім’я:</b> " + esc(cut(rec.name, 60) || "—"));
   L.push("📞 <b>Телефон:</b> " + esc(normalizePhone(rec.phone) || "—"));
