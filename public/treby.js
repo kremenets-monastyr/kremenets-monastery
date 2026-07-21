@@ -215,16 +215,36 @@ function render(){
 
 function computeTotals(){
   const sum=document.getElementById('summary');if(!sum)return;sum.innerHTML='';
-  let grand=0,hasDon=false;
+  let grand=0,hasDon=false,freeAll=0;
   sheets.forEach((s,idx)=>{
-    const tr=s.treba!=null?TREBY.find(t=>t.n===s.treba):null,sm=sheetSum(s);let v='—';
-    if(sm){if(sm.kind==='donation'){v='пожертва';hasDon=true;}else{v=fmt(sm.v);grand+=sm.v;}}
-    const row=document.createElement('div');row.className='crow link';
+    const tr=s.treba!=null?TREBY.find(t=>t.n===s.treba):null,sm=sheetSum(s);
+    let v='—',isDon=false;
+    if(sm){ if(sm.kind==='donation'){v='пожертва';hasDon=true;isDon=true;} else {v=fmt(sm.v);grand+=sm.v;} }
+
+    const cnt=s.names.filter(n=>n.trim()).length;
+    const free=freeCount(s); freeAll+=free;
+    const meta=[];
+    if(cnt) meta.push(cnt+' '+(cnt===1?'імʼя':(cnt<5?'імені':'імен')));
+    if(free) meta.push(free+' безкоштовно');
+
+    const row=document.createElement('div');
+    row.className='crow';
     row.setAttribute('onclick','goToSheet('+s.id+')');
-    row.innerHTML=`<span class="nm">${idx+1}. ${TYPE[s.type].ttl}${tr?' — '+tr.t:''}</span><span class="v">${v}</span><button class="crow-x" title="Видалити записку" onclick="event.stopPropagation();removeSheet(${s.id})">✕</button>`;
+    row.innerHTML=
+      '<a class="c-lnk">'+(idx+1)+'. '+TYPE[s.type].ttl+(tr?' — '+((tr.grp&&tr.grp!==tr.t?tr.grp+' · ':'')+tr.t):'')+
+        (meta.length?' <span class="c-meta">('+meta.join(', ')+')</span>':'')+'</a>'+
+      '<span class="c-v'+(isDon?' don':'')+'">'+v+'</span>'+
+      '<button class="crow-x" title="Видалити записку" aria-label="Видалити записку" onclick="event.stopPropagation();removeSheet('+s.id+')">✕</button>';
     sum.appendChild(row);
   });
-  document.getElementById('grand').textContent=fmt(grand)+(hasDon?' + пожертва':'');
+
+  const g=document.getElementById('grand');
+  if(g) g.textContent=fmt(grand)+(hasDon?' + пожертва':'');
+  const note=document.getElementById('grandNote');
+  if(note){
+    note.textContent=freeAll?('🕯 Воїнів безкоштовно: '+freeAll):'';
+    note.style.display=freeAll?'block':'none';
+  }
 }
 
 /* Список треб — групи у порядку прайсу */
