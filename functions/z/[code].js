@@ -3,6 +3,16 @@
  * Читає запис із KV (RECORDS) за номером і показує його разом із поточними реквізитами
  * (із закріпленого повідомлення каналу). Дійсна 7 днів (TTL запису в KV).
  */
+function normPhoneZ(raw) {
+  const d = String(raw || "").replace(/\D/g, "");
+  if (!d) return String(raw || "").trim();
+  if (d.length === 12 && d.startsWith("380")) return "+" + d;
+  if (d.length === 11 && d.startsWith("80")) return "+3" + d;
+  if (d.length === 10 && d.startsWith("0")) return "+38" + d;
+  if (d.length === 9) return "+380" + d;
+  return String(raw || "").trim();
+}
+
 function isWarriorZ(name) {
   const s = String(name || "").toLowerCase().trim();
   if (!s) return false;
@@ -36,12 +46,34 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .sh-n{list-style:none;font-size:15px;margin-bottom:6px}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
+.telx{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+.tohome{display:inline-block;margin-bottom:14px;font-size:14px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:#fff}
+.tohome:hover{border-color:var(--blue);background:var(--bg)}
+.step-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.req.step1{border:2px solid #C79A3B;background:#FFFCF5}
+.req.step1 .step-tag{background:#C79A3B;color:#fff}
+.rc.step2{border:2px solid #2E7D5B;background:#F5FBF8}
+.filebtn{display:inline-block;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#2E7D5B;background:#fff;border:1.5px solid #2E7D5B;border-radius:999px;padding:10px 18px;margin:2px 0 8px;transition:.15s}
+.filebtn:hover{background:#2E7D5B;color:#fff}
+.filename{font-size:13px;color:var(--muted);margin-bottom:10px;word-break:break-all}
+.rc.step2 .step-tag{background:#2E7D5B;color:#fff}
+@media print{
+  .tohome,.share,.rc,.btn,.acc-x,.note{display:none!important}
+  body{background:#fff}
+  .card{box-shadow:none;border:none;padding:0}
+  .acc{display:block!important}
+  .acc-b{display:block!important}
+  .sheet{page-break-inside:avoid}
+  .sh-n li{font-size:12pt!important;line-height:1.7}
+  .sh-tr,.sh-h{font-size:12pt!important}
+  .code b{font-size:14pt}
+}
 .ucm{font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0}
 .sh-n li{overflow-wrap:anywhere;word-break:break-word}
 .warr{background:#FFF7E6;border-radius:6px;padding:2px 6px}
 .freetag{font-size:11px;color:#8A6D1F;white-space:nowrap}
 .sh-w{font-size:13px;color:var(--blue);background:var(--bg);border-radius:8px;padding:5px 8px;margin-bottom:6px;display:inline-block}
-.total{text-align:right;font-size:16px;margin:6px 2px 20px}
+.total{text-align:center;font-size:16px;margin:6px 2px 20px}
 .total b{font-family:'Monomakh',serif;font-size:22px;color:var(--blue)}
 .req{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
 .req-t{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;text-align:center;margin-bottom:10px}
@@ -71,11 +103,12 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .rc input[type=file]{font-size:13px;max-width:100%;margin-bottom:10px}
 .rc-msg{font-size:13px;min-height:16px;margin-top:8px}
 .rc-msg.ok{color:var(--blue)}.rc-msg.err{color:var(--red)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;align-items:stretch}
+.two{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
 .two>*{min-width:0;margin-bottom:0}
-.two .rc{margin-bottom:0;display:flex;flex-direction:column;justify-content:center}
-.two .req{margin-bottom:0}
-@media(max-width:600px){.two{grid-template-columns:1fr}}
+.two .rc,.two .req{margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-start;width:100%;box-sizing:border-box;text-align:center}
+.two .step-tag{align-self:center}
+.two .req pre{text-align:left}
+
 .rc.done{border-style:solid;border-color:var(--blue);background:#E4EBF7}
 @media(max-width:600px){
   body{padding:14px 10px}
@@ -115,6 +148,8 @@ if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(L
 var rq = document.querySelector('.req .btn2');
 if (rq) rq.addEventListener('click', function(){ var o=rq.textContent; rq.textContent='Скопійовано \u2713'; setTimeout(function(){rq.textContent=o;},1500); });
 var f=document.getElementById('rcFile'), b=document.getElementById('rcSend'), m=document.getElementById('rcMsg');
+var nameBox=document.getElementById('rcName');
+if(f&&nameBox){f.addEventListener('change',function(){nameBox.textContent=f.files&&f.files[0]?f.files[0].name:'Файл не вибрано';});}
 if (b) b.addEventListener('click', async function(){
   if(!f.files||!f.files[0]){ m.textContent='Оберіть файл'; m.className='rc-msg err'; return; }
   if(f.files[0].size>10*1024*1024){ m.textContent='Файл завеликий (до 10 МБ)'; m.className='rc-msg err'; return; }
@@ -176,14 +211,15 @@ export async function onRequestGet(context) {
   }
   const req = await getRequisites(env);
   const reqBlock = req
-    ? '<div class="req"><div class="req-t">Реквізити для пожертви</div><pre id="req">' + esc(req) + '</pre>' +
+    ? '<div class="req step1"><div class="step-tag">Крок 1</div><div class="req-t">Зробіть пожертву за реквізитами</div><pre id="req">' + esc(req) + '</pre>' +
       '<button class="btn2" onclick="navigator.clipboard.writeText(document.getElementById(\'req\').textContent)">Скопіювати реквізити</button></div>'
-    : '<div class="req"><div class="req-t">Реквізити для пожертви</div><p class="muted">Реквізити надасть обитель — зверніться до контактів і назвіть номер запису.</p></div>';
+    : '<div class="req step1"><div class="step-tag">Крок 1</div><div class="req-t">Зробіть пожертву за реквізитами</div><p class="muted">Реквізити надасть обитель — зверніться до контактів і назвіть номер запису.</p></div>';
 
   if (!rec) {
     const inner =
       '<div class="wrap"><div class="card">' +
-      '<div class="brand">Свято-Богоявленський Кременецький<br>жіночий монастир</div>' +
+      '<a class="tohome" href="' + origin + '/">← На головну</a>' +
+    '<div class="brand">Свято-Богоявленський Кременецький<br>жіночий монастир</div>' +
       '<h1>Записки не знайдено</h1>' +
       '<p class="muted">Запис за номером <b>' + esc(code) + '</b> не знайдено. Можливо, минуло понад 7 днів або номер введено з помилкою.</p>' +
       '<div style="height:16px"></div>' + reqBlock +
@@ -224,8 +260,9 @@ export async function onRequestGet(context) {
   const shareTxt = "Ваші записки до монастиря (Свято-Богоявленський Кременецький жіночий монастир). Номер: " + (rec.code || code) + ".";
   const I = {
     tg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.9 19c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.9 12.9 2.3 11.5c-1-.3-1-1 .2-1.5l18.1-7c.8-.3 1.5.2 1.3 1.3z"/></svg>',
-    vb: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.6 2 4 5.2 4 9.2c0 2.2 1.1 4.2 2.9 5.5v3.8c0 .5.6.8 1 .5l2.6-2c.5.1 1 .1 1.5.1 4.4 0 8-3.2 8-7.2S16.4 2 12 2zm4.6 9.6c-.2.5-.9.9-1.4 1-.4.1-.9.1-1.4-.1-.3-.1-.8-.3-1.4-.5-2.4-1-4-3.4-4.1-3.6-.1-.2-1-1.3-1-2.4s.6-1.7.8-1.9c.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.7 1.6c.1.1.1.3 0 .4l-.2.3-.3.3c-.1.1-.2.2-.1.4.1.2.5.9 1.1 1.4.8.7 1.4.9 1.6 1 .2.1.3.1.4-.1l.6-.7c.1-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.2.1.6 0 .9z"/></svg>',
-    wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.5-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.1-.3 0-.5l-.7-1.7c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.1s.9 2.5 1 2.6c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.1-.4-.2z"/></svg>',
+    vb: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 0C9.5.03 5.3.34 3 2.47 1.3 4.19.7 6.7.63 9.82c-.06 3.11-.13 8.94 5.48 10.52v2.41s-.04.97.6 1.17c.79.25 1.24-.5 1.99-1.3l1.4-1.58c3.83.32 6.78-.42 7.11-.53.78-.25 5.18-.81 5.9-6.65.74-6.02-.36-9.83-2.34-11.55-.6-.55-3-2.29-8.37-2.31 0 0-.4-.03-1-.02zm.06 1.68c.52 0 .83.02.83.02 4.54.01 6.71 1.38 7.22 1.84 1.67 1.43 2.53 4.86 1.9 9.89-.6 4.87-4.17 5.18-4.83 5.39-.28.09-2.88.73-6.16.52 0 0-2.44 2.95-3.2 3.71-.12.12-.26.17-.35.15-.13-.03-.17-.19-.16-.42l.02-4.05c-4.74-1.32-4.46-6.28-4.41-8.88.05-2.6.54-4.73 1.99-6.16 1.96-1.78 5.48-2.02 7.15-2.01zm.56 2.5a.29.29 0 100 .58c1.4 0 2.6.42 3.53 1.35.93.93 1.35 2.12 1.35 3.53a.29.29 0 10.58 0c0-1.58-.5-2.93-1.55-3.98-1.05-1.05-2.4-1.55-3.98-1.55zm-4.13 1.2c-.24 0-.47.07-.66.22-.42.34-.8.75-1.06 1.18-.23.4-.35.82-.38 1.21-.03.35.05.7.15.97.29.8.85 1.65 1.23 2.24.51.77 1.12 1.5 1.83 2.14.72.62 1.51 1.14 2.37 1.54.51.24 1.05.43 1.45.54.42.11.82.07 1.15-.06.44-.18.83-.52 1.16-.9.16-.2.24-.44.24-.69 0-.25-.09-.49-.25-.69-.33-.37-.88-.72-1.27-.96-.41-.25-.85-.41-1.23-.41-.29 0-.57.1-.77.31l-.43.43a.32.32 0 01-.4.04 7.5 7.5 0 01-1.54-1.17 7.5 7.5 0 01-1.17-1.54.32.32 0 01.04-.4l.43-.43c.33-.33.37-.88.11-1.54-.16-.41-.43-.87-.72-1.28a1.13 1.13 0 00-.68-.24zm4.42.77a.29.29 0 10-.06.58c.87.09 1.48.34 1.89.75.41.41.66 1.02.75 1.89a.29.29 0 10.58-.06c-.1-.98-.4-1.75-.92-2.24-.5-.5-1.26-.82-2.24-.92zm.4 2.07a.29.29 0 10-.09.57c.35.06.55.16.67.28.12.12.22.32.28.67a.29.29 0 10.57-.09c-.07-.45-.24-.83-.52-1.11-.28-.28-.66-.45-1.11-.52z"/></svg>',
+
+    wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.66-2.06-.17-.3-.02-.46.13-.6.14-.14.3-.35.44-.53.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.03 1.02-1.03 2.48s1.06 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.18-1.42-.08-.12-.28-.2-.57-.34m-5.42 7.4h-.01a9.87 9.87 0 01-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 01-1.51-5.26C2.16 6.44 6.6 2 12.05 2c2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 012.89 6.99c0 5.45-4.44 9.89-9.89 9.89M20.46 3.49A11.82 11.82 0 0012.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 005.69 1.45c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.41z"/></svg>',
     em: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="m3 6 9 6.5L21 6"/></svg>',
     cp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
   };
@@ -238,18 +275,21 @@ export async function onRequestGet(context) {
     '<button class="shi cp" id="cpLink" title="Копіювати посилання" aria-label="Копіювати посилання">' + I.cp + '</button>' +
     '</div></div>';
   const receiptBlock =
-    '<div class="rc"><div class="rc-t">Надіслати квитанцію про оплату</div>' +
-    '<p class="rc-p">Прикріпіть скрін або фото квитанції (за бажанням).</p>' +
-    '<input type="file" id="rcFile" accept="image/*,application/pdf">' +
+    '<div class="rc step2"><div class="step-tag">Крок 2</div><div class="rc-t">Надішліть квитанцію</div>' +
+    '<p class="rc-p">Прикріпіть скрін або фото підтвердження оплати — так обитель швидше знайде вашу пожертву. За бажанням.</p>' +
+    '<input type="file" id="rcFile" accept="image/*,application/pdf" hidden>' +
+    '<label class="filebtn" for="rcFile">📎 Прикріпити файл</label>' +
+    '<div class="filename" id="rcName">Файл не вибрано</div>' +
     '<button class="btn2" id="rcSend">Надіслати квитанцію</button>' +
     '<div class="rc-msg" id="rcMsg"></div></div>';
 
   const inner =
     '<div class="wrap"><div class="card">' +
+    '<a class="tohome" href="' + origin + '/">← На головну</a>' +
     '<div class="brand">Свято-Богоявленський Кременецький<br>жіночий монастир</div>' +
     '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
-    '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · ' + esc(rec.phone) : '') + '</div>' +
+    '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · <a class="telx" href="tel:' + esc(normPhoneZ(rec.phone)) + '">' + esc(normPhoneZ(rec.phone)) + '</a>' : '') + '</div>' +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + receiptBlock + '</div>' +

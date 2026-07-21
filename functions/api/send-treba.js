@@ -1,4 +1,4 @@
-import { renderCard, keyboard, getTopics, addLog, tgCard, isWarrior as isWarriorSrv, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
+import { renderCard, keyboard, getTopics, addLog, tgCard, normalizePhone, isWarrior as isWarriorSrv, TTL_SECONDS as CARD_TTL } from "../_lib/card.js";
 /**
  * Cloudflare Pages Function — приймає записку з сайту, надсилає її у Telegram
  * і (за наявності KV) зберігає запис на 7 днів під унікальним номером.
@@ -138,7 +138,7 @@ export async function onRequestPost(context) {
   const origin = new URL(request.url).origin;
 
   const record = {
-    code, ts: Date.now(), name, phone,
+    code, ts: Date.now(), name, phone: normalizePhone(phone),
     total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
     comment: String(d.comment || "").trim().slice(0, 300),
     sheets, origin, status: "new", log: [],

@@ -249,6 +249,16 @@ function warriorBlock(){
   if(!bad.length)return null;
   return 'За здоровʼя воїнів приймаємо на термін до 1 місяця (40 днів). Змініть требу в записці.';
 }
+/* Зводимо номер до вигляду +380XXXXXXXXX — щоб він був клікабельним */
+function normPhone(raw){
+  var d=String(raw||'').replace(/\D/g,'');
+  if(!d)return String(raw||'').trim();
+  if(d.length===12&&d.indexOf('380')===0)return '+'+d;
+  if(d.length===11&&d.indexOf('80')===0)return '+3'+d;
+  if(d.length===10&&d.indexOf('0')===0)return '+38'+d;
+  if(d.length===9)return '+380'+d;
+  return String(raw||'').trim();
+}
 function buildPayload(){
   const filled=sheets.filter(s=>s.treba!=null&&s.names.some(n=>n.trim()));
   let total=0,hasDon=false;
@@ -257,7 +267,7 @@ function buildPayload(){
     return{type:s.type,trebaN:tr.n,trebaGroup:tr.grp,trebaTitle:tr.t,unit:tr.unit,when:(s.when||'').trim().slice(0,120),names:s.names.filter(n=>n.trim()),sum};});
   var hpEl=document.getElementById('hp');
   var cEl=document.getElementById('ucomment');
-  return{name:(document.getElementById('uname')||{}).value?document.getElementById('uname').value.trim():'',phone:document.getElementById('phone').value.trim(),comment:cEl?cEl.value.trim().slice(0,300):'',hp:hpEl?hpEl.value:'',total,hasDonation:hasDon,sheets:out};
+  return{name:(document.getElementById('uname')||{}).value?document.getElementById('uname').value.trim():'',phone:normPhone(document.getElementById('phone').value),comment:cEl?cEl.value.trim().slice(0,300):'',hp:hpEl?hpEl.value:'',total,hasDonation:hasDon,sheets:out};
 }
 function toast(t){var e=document.getElementById('toast');if(!e)return;e.textContent=t;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},4500);}
 function resetAll(){sheets=[];uid=0;render();['phone','uname'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}

@@ -42,6 +42,26 @@ export function cut(s, n) {
   return t.length > n ? t.slice(0, n - 1) + "…" : t;
 }
 
+/**
+ * Зводимо будь-який запис номера до вигляду +380XXXXXXXXX —
+ * тільки такий формат Telegram робить клікабельним.
+ * Розуміє: +38(067)-714-47-77, 380973555587, 067 714 47 77, 0677144777 тощо.
+ */
+export function normalizePhone(raw) {
+  const d = String(raw || "").replace(/\D/g, "");
+  if (!d) return String(raw || "").trim();
+  if (d.length === 12 && d.startsWith("380")) return "+" + d;
+  if (d.length === 11 && d.startsWith("80")) return "+3" + d;
+  if (d.length === 10 && d.startsWith("0")) return "+38" + d;
+  if (d.length === 9) return "+380" + d;
+  if (d.length > 12 && d.includes("380")) {
+    const i = d.indexOf("380");
+    const t = d.slice(i, i + 12);
+    if (t.length === 12) return "+" + t;
+  }
+  return String(raw || "").trim();
+}
+
 export function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -112,7 +132,7 @@ function buildCard(rec, nameCap, expandable) {
   L.push("💳 <b>Разом:</b> " + (tot || "—"));
   if (freeTotal) L.push("🕯 <b>Воїнів (безкоштовно):</b> " + freeTotal);
   L.push("👤 <b>Ім’я:</b> " + esc(cut(rec.name, 60) || "—"));
-  L.push("📞 <b>Телефон:</b> " + esc(cut(rec.phone, 30) || "—"));
+  L.push("📞 <b>Телефон:</b> " + esc(normalizePhone(rec.phone) || "—"));
   if (rec.comment) L.push("✉️ <b>Коментар:</b> " + esc(cut(rec.comment, 300)));
   if (rec.origin) L.push("🔗 Записки: " + rec.origin + "/z/" + rec.code);
 
@@ -206,7 +226,7 @@ export function keyboard(rec) {
   }
   rows.push([
     { text: "🔢 Номер", copy_text: { text: String(rec.code || "") } },
-    { text: "📞 Телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
+    { text: "📞 Телефон", copy_text: { text: normalizePhone(rec.phone).slice(0, 256) } },
   ]);
   return { inline_keyboard: rows };
 }
