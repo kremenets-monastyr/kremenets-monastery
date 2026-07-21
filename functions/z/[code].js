@@ -159,37 +159,6 @@ var cp = document.getElementById('cpLink');
 if (cp) cp.addEventListener('click', function(){ navigator.clipboard.writeText(LINK); cp.classList.add('copied'); setTimeout(function(){cp.classList.remove('copied');},1400); });
 var rq = document.querySelector('.req .btn2');
 if (rq) rq.addEventListener('click', function(){ var o=rq.textContent; rq.textContent='Скопійовано \u2713'; setTimeout(function(){rq.textContent=o;},1500); });
-(function(){
-  var pick=null, box=document.getElementById('dnMsg'), other=document.getElementById('dnOther'), go=document.getElementById('dnSend');
-  if(!go)return;
-  document.querySelectorAll('.dn-b').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('.dn-b').forEach(function(x){x.classList.remove('on');});
-      btn.classList.add('on'); pick=Number(btn.dataset.v); if(other)other.value='';
-    });
-  });
-  if(other)other.addEventListener('input',function(){
-    document.querySelectorAll('.dn-b').forEach(function(x){x.classList.remove('on');});
-    pick=Number(other.value)||null;
-  });
-  go.addEventListener('click',async function(){
-    var amount=pick||Number(other&&other.value)||0;
-    if(!(amount>0)){ box.textContent='Оберіть або впишіть суму'; box.className='dn-msg err'; return; }
-    go.disabled=true; box.textContent='Записуємо…'; box.className='dn-msg';
-    try{
-      var r=await fetch('/api/donation',{method:'POST',headers:{'content-type':'application/json'},
-        body:JSON.stringify({code:__CODE__,amount:amount})});
-      var d=await r.json();
-      if(d.ok){
-        box.textContent='Дякуємо! Додайте цю суму до переказу за реквізитами.'; box.className='dn-msg ok';
-        var has=document.getElementById('dnHas');
-        if(has){ has.hidden=false; has.innerHTML='Уже додано: <b>'+d.extra+' грн</b>'; }
-      } else { box.textContent=d.error||'Не вдалося записати'; box.className='dn-msg err'; }
-    }catch(e){ box.textContent='Немає звʼязку. Спробуйте ще раз.'; box.className='dn-msg err'; }
-    go.disabled=false;
-  });
-})();
-
 var f=document.getElementById('rcFile'), b=document.getElementById('rcSend'), m=document.getElementById('rcMsg');
 var nameBox=document.getElementById('rcName');
 if(f&&nameBox){f.addEventListener('change',function(){nameBox.textContent=f.files&&f.files[0]?f.files[0].name:'Файл не вибрано';});}
@@ -326,17 +295,6 @@ export async function onRequestGet(context) {
     '<button class="btn2" id="rcSend">Надіслати квитанцію</button>' +
     '<div class="rc-msg" id="rcMsg"></div></div>';
 
-  const donateBlock =
-    '<div class="dn"><div class="dn-t">⛪ Додати пожертву на обитель</div>' +
-    '<p class="dn-p">За бажанням можете додати до переказу будь-яку суму — на свічки, олію, ремонт храму чи потреби сестер.</p>' +
-    '<div class="dn-row">' +
-      ['50','100','200','500'].map(function(v){ return '<button class="dn-b" data-v="' + v + '">' + v + ' грн</button>'; }).join('') +
-      '<input class="dn-i" id="dnOther" type="number" min="1" max="100000" inputmode="numeric" placeholder="інша">' +
-    '</div>' +
-    '<button class="btn2 dn-go" id="dnSend">Додати до пожертви</button>' +
-    (rec.extra ? '<div class="dn-has">Уже додано: <b>' + esc(String(rec.extra)) + ' грн</b></div>' : '<div class="dn-has" id="dnHas" hidden></div>') +
-    '<div class="dn-msg" id="dnMsg"></div></div>';
-
   const inner =
     '<div class="wrap"><div class="card">' +
     '<a class="tohome" href="' + origin + '/">← На головну</a>' +
@@ -344,10 +302,10 @@ export async function onRequestGet(context) {
     '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
     '<div class="meta">' + esc(dt) + (rec.name ? ' · ' + esc(rec.name) : '') + (rec.phone ? ' · <a class="telx" href="tel:' + esc(normPhoneZ(rec.phone)) + '">' + esc(normPhoneZ(rec.phone)) + '</a>' : '') + '</div>' +
+    (rec.extra ? '<div class="ucm">⛪ У тому числі пожертва на обитель: <b>' + esc(String(rec.extra)) + ' грн</b></div>' : '') +
     '<div class="total">До сплати: <b>' + (tot || "—") + '</b></div>' +
     '<div class="donate"><b>Оплата треб — це добровільна пожертва на монастир.</b></div>' +
     '<div class="two">' + reqBlock + receiptBlock + '</div>' +
-    donateBlock +
     shareBlock +
     (rec.comment ? '<p class="ucm"><b>Ваш коментар:</b> ' + esc(rec.comment) + '</p>' : '') +
     '<p class="note">У призначенні платежу (коментарі) напишіть: <b>пожертва ' + esc(rec.code || code) + '</b>.<br>' +

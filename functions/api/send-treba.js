@@ -141,6 +141,7 @@ export async function onRequestPost(context) {
     code, ts: Date.now(), name, phone: normalizePhone(phone),
     total: Number(d.total) || 0, hasDonation: !!d.hasDonation,
     comment: String(d.comment || "").trim().slice(0, 300),
+    extra: Math.max(0, Math.min(100000, Math.round(Number(d.extra) || 0))),
     sheets, origin, status: "new", log: [],
   };
 

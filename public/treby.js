@@ -213,6 +213,8 @@ function render(){
   computeTotals();
 }
 
+var extraDonation=0;
+
 function computeTotals(){
   const sum=document.getElementById('summary');if(!sum)return;sum.innerHTML='';
   let grand=0,hasDon=false,freeAll=0;
@@ -239,11 +241,14 @@ function computeTotals(){
   });
 
   const g=document.getElementById('grand');
-  if(g) g.textContent=fmt(grand)+(hasDon?' + пожертва':'');
+  if(g) g.textContent=fmt(grand+extraDonation)+(hasDon?' + пожертва':'');
   const note=document.getElementById('grandNote');
   if(note){
-    note.textContent=freeAll?('🕯 Воїнів безкоштовно: '+freeAll):'';
-    note.style.display=freeAll?'block':'none';
+    const bits=[];
+    if(extraDonation) bits.push('у тому числі пожертва на обитель '+fmt(extraDonation));
+    if(freeAll) bits.push('🕯 воїнів безкоштовно: '+freeAll);
+    note.textContent=bits.join(' · ');
+    note.style.display=bits.length?'block':'none';
   }
 }
 
@@ -279,6 +284,25 @@ function normPhone(raw){
   if(d.length===9)return '+380'+d;
   return String(raw||'').trim();
 }
+function setExtra(v){
+  extraDonation=Math.max(0,Math.min(100000,Math.round(Number(v)||0)));
+  document.querySelectorAll('.dn-b').forEach(function(x){ x.classList.toggle('on', Number(x.dataset.v)===extraDonation && extraDonation>0); });
+  computeTotals();
+}
+function initDonation(){
+  document.querySelectorAll('.dn-b').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var v=Number(btn.dataset.v);
+      var other=document.getElementById('dnOther');
+      if(extraDonation===v){ setExtra(0); if(other)other.value=''; return; }   // повторний клік — скасувати
+      if(other)other.value='';
+      setExtra(v);
+    });
+  });
+  var other=document.getElementById('dnOther');
+  if(other) other.addEventListener('input',function(){ setExtra(other.value); });
+}
+
 function buildPayload(){
   const filled=sheets.filter(s=>s.treba!=null&&s.names.some(n=>n.trim()));
   let total=0,hasDon=false;
@@ -287,10 +311,13 @@ function buildPayload(){
     return{type:s.type,trebaN:tr.n,trebaGroup:tr.grp,trebaTitle:tr.t,unit:tr.unit,when:(s.when||'').trim().slice(0,120),names:s.names.filter(n=>n.trim()),sum};});
   var hpEl=document.getElementById('hp');
   var cEl=document.getElementById('ucomment');
-  return{name:(document.getElementById('uname')||{}).value?document.getElementById('uname').value.trim():'',phone:normPhone(document.getElementById('phone').value),comment:cEl?cEl.value.trim().slice(0,300):'',hp:hpEl?hpEl.value:'',total,hasDonation:hasDon,sheets:out};
+  return{name:(document.getElementById('uname')||{}).value?document.getElementById('uname').value.trim():'',phone:normPhone(document.getElementById('phone').value),comment:cEl?cEl.value.trim().slice(0,300):'',extra:extraDonation,hp:hpEl?hpEl.value:'',total:total+extraDonation,hasDonation:hasDon,sheets:out};
 }
 function toast(t){var e=document.getElementById('toast');if(!e)return;e.textContent=t;e.classList.add('show');setTimeout(function(){e.classList.remove('show');},4500);}
-function resetAll(){sheets=[];uid=0;render();['phone','uname'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
+function resetAll(){sheets=[];uid=0;extraDonation=0;
+  var o=document.getElementById('dnOther'); if(o)o.value='';
+  document.querySelectorAll('.dn-b').forEach(function(x){x.classList.remove('on');});
+  render();['phone','uname'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});}
 function copyTxt(t,el){try{navigator.clipboard.writeText(t).then(function(){var o=el.getAttribute('data-lbl')||el.textContent;el.setAttribute('data-lbl',o);el.textContent='Скопійовано \u2713';setTimeout(function(){el.textContent=o;},1500);});}catch(e){}}
 function krShareRow(code,link){
   var t='Ваші записки до монастиря (Свято-Богоявленський Кременецький жіночий монастир). Номер: '+code+'.';
@@ -428,3 +455,6 @@ function showReturnBanner(code){
     setTimeout(function(){showReturnBanner(o.code);},700);
   }catch(e){}
 })();
+
+/* Кнопки додаткової пожертви */
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDonation);}else{initDonation();}
