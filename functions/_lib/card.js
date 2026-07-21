@@ -205,7 +205,8 @@ export function keyboard(rec) {
     rows.push([{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]);
   }
   rows.push([
-    { text: "📞 Копіювати телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
+    { text: "🔢 Номер", copy_text: { text: String(rec.code || "") } },
+    { text: "📞 Телефон", copy_text: { text: String(rec.phone || "").slice(0, 256) } },
   ]);
   return { inline_keyboard: rows };
 }

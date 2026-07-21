@@ -132,7 +132,53 @@ export async function onRequestPost(context) {
     return ok();
   }
 
-  // ---------- 3) Коментар: відповідь менеджера на картку ----------
+  // ---------- 3) Фото/файл у групі — приєднуємо до записки автоматично ----------
+  if (msg && (msg.photo || msg.document)) {
+    let code = null;
+
+    // а) надіслано відповіддю на картку
+    if (msg.reply_to_message) {
+      code = findCode(msg.reply_to_message.text || msg.reply_to_message.caption || "");
+    }
+    // б) номер записки написано в підписі до фото
+    if (!code && msg.caption) code = findCode(msg.caption);
+
+    if (code) {
+      const rec = await getRecord(env, code);
+      if (rec) {
+        rec.receipt = true;
+        rec.receiptTs = Date.now();
+        if (rec.status !== "paid") {
+          rec.status = "check";
+          addLog(rec, { kind: "status", to: "check", text: "додано квитанцію — потрібна перевірка", who: personName(msg.from) });
+        }
+        await saveRecord(env, rec);
+        await placeCard(env, rec);
+        await tg(env, "sendMessage", {
+          chat_id: msg.chat.id,
+          ...(msg.message_thread_id ? { message_thread_id: msg.message_thread_id } : {}),
+          reply_to_message_id: msg.message_id,
+          text: "🧾 Квитанцію приєднано до записки №" + rec.code + " — картка в темі «🟠 Перевірка оплати».",
+          disable_notification: true,
+        });
+      }
+      return ok();
+    }
+
+    // номер не знайдено — підказуємо, як приєднати
+    if (msg.chat && msg.chat.type !== "private") {
+      await tg(env, "sendMessage", {
+        chat_id: msg.chat.id,
+        ...(msg.message_thread_id ? { message_thread_id: msg.message_thread_id } : {}),
+        reply_to_message_id: msg.message_id,
+        text: "⚠️ Не видно, до якої записки ця квитанція.\nНадішліть її відповіддю на картку записки або вкажіть у підписі номер (напр. 2026-ABCDE).",
+        disable_notification: true,
+      });
+    }
+    return ok();
+  }
+
+  // ---------- 4) Коментар: відповідь менеджера на картку ----------
   if (msg && msg.reply_to_message && typeof msg.text === "string" && msg.text.trim()) {
     const parentId = msg.reply_to_message.message_id;
     const code = findCode(msg.reply_to_message.text || msg.reply_to_message.caption || "");
@@ -157,8 +203,12 @@ export async function onRequestPost(context) {
 
 /** Дістати номер записки з тексту картки */
 function findCode(text) {
-  const m = String(text).match(/№\s*([0-9]{4}-[A-Z0-9]{5})/);
-  return m ? m[1] : null;
+  // Номер може бути з «№» або без, з дефісом або без: №2026-ABCDE, 2026-ABCDE, 2026ABCDE
+  const t = String(text || "").toUpperCase();
+  let m = t.match(/№\s*(20\d{2})-?([A-Z0-9]{5})/);
+  if (!m) m = t.match(/(?:^|[\s:,.\/#(])(20\d{2})-([A-Z0-9]{5})/);
+  if (!m) m = t.match(/(20\d{2})-([A-Z0-9]{5})/);
+  return m ? m[1] + "-" + m[2] : null;
 }
 
 export async function onRequest(context) {
