@@ -357,6 +357,6 @@ export async function onRequestGet(context) {
       '<span class="acc-x" aria-hidden="true"></span></summary>' +
       '<div class="acc-b">' + sheets + '</div></details>' +
     '<a class="btn" href="' + origin + '/">Подати ще одну записку</a></div></div>' +
-    '<script>' + SCRIPT.replace('__CODE__', JSON.stringify(rec.code || code)) + '<\/script>';
+    '<script>' + SCRIPT.replace(/__CODE__/g, JSON.stringify(rec.code || code)) + '<\/script>';
   return html(pageHtml(inner, "Ваші записки " + (rec.code || code)));
 }

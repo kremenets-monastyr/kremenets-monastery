@@ -224,10 +224,15 @@ export function keyboard(rec) {
   if (row2.length) rows.push(row2);
   if (cur !== "new") rows.push([B("new", "↩︎ Повернути в нові")]);
 
-  // Якщо синодик не вмістився в картку — даємо кнопку, щоб надіслати його окремо
-  if (!renderCard(rec).includes("<pre>")) {
-    rows.push([{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]);
-  }
+  // Копіювання записки — доступне завжди.
+  // Короткі копіюються одразу з кнопки, довгі надсилаються окремим повідомленням,
+  // бо кнопки Telegram вміщають не більше 256 знаків.
+  const syn = copyNames(rec);
+  rows.push(
+    syn.length <= 256
+      ? [{ text: "📋 Копіювати записку", copy_text: { text: syn } }]
+      : [{ text: "📋 Записка окремим повідомленням", callback_data: "syn:" + c }]
+  );
   rows.push([
     { text: "🔢 Номер", copy_text: { text: String(rec.code || "") } },
     { text: "📞 Телефон", copy_text: { text: normalizePhone(rec.phone).slice(0, 256) } },
