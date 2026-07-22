@@ -16,7 +16,8 @@ function normPhoneZ(raw) {
 function isWarriorZ(name) {
   const s = String(name || "").toLowerCase().trim();
   if (!s) return false;
-  if (/(^|[\s,;(])в\.(\s|$)/.test(s)) return true;
+  if (/(^|[\s,;.(/])в\.\s*[а-яіїєґ]/i.test(s) || /(^|[\s,;.(/])в\.?(\s|$)/.test(s)) return true;
+  if (/безв|пропав|проп\.|т\.б\.|тб\.|зникл|зник\.|полон|плен/.test(s)) return true;
   return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
 }
 

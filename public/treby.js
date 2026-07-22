@@ -138,7 +138,8 @@ function delName(id,i){const s=sheets.find(x=>x.id===id);s.names.splice(i,1);if(
 function isWarrior(name){
   const s=String(name||'').toLowerCase().trim();
   if(!s)return false;
-  if(/(^|[\s,;(])в\.(\s|$)/.test(s))return true;
+  if(/(^|[\s,;.(/])в\.\s*[а-яіїєґ]/i.test(s)||/(^|[\s,;.(/])в\.?(\s|$)/.test(s))return true;
+  if(/безв|пропав|проп\.|т\.б\.|тб\.|зникл|зник\.|полон|плен/.test(s))return true;
   return /(во[іїй]н|воин|войн|б[іо][йє]ц|військовослужб|воєннослужб|безв[іе]ст|полонен|полонян|зниклий|зсу|всу)/.test(s);
 }
 /* Воїнів обитель приймає на термін до 1 місяця (40 днів).
