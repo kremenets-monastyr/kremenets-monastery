@@ -104,9 +104,10 @@ function buildCard(rec, nameCap, expandable) {
     L.push("━━━━━━━━━━━━");
     L.push(ty.e + " <b>" + ty.t + "</b>");
     const g = (s.trebaGroup && s.trebaGroup !== s.trebaTitle) ? esc(cut(s.trebaGroup, 60)) + " · " : "";
-    L.push("Треба: " + g + esc(cut(s.trebaTitle, 80)));
+    L.push("Треба: <b>" + g + esc(cut(s.trebaTitle, 80)) + "</b>");
     if (s.when) L.push("🗓 Коли: " + esc(cut(s.when, 60)));
     const names = Array.isArray(s.names) ? s.names : [];
+    L.push("");
     L.push("Імена (" + names.length + "):");
     const shown = nameCap && names.length > nameCap ? names.slice(0, nameCap) : names;
     shown.forEach((n, i) => {
@@ -247,25 +248,13 @@ export function copyNames(rec) {
   (rec.sheets || []).forEach((s, idx) => {
     if (idx) lines.push("");
     if (TY[s.type]) lines.push(TY[s.type]);
-    // Повна назва треби: група + термін («Неусипна псалтир · 1 місяць»)
     const g = s.trebaGroup && s.trebaGroup !== s.trebaTitle ? s.trebaGroup + " · " : "";
     if (s.trebaTitle || g) lines.push((g + (s.trebaTitle || "")).trim());
     if (s.when) lines.push("на " + s.when);
-    (s.names || []).forEach((n) => lines.push(cut(n, 70)));
+    (s.names || []).forEach((n, i) => { lines.push((i + 1) + ". " + cut(n, 70)); });
   });
   const t = lines.join("\n") || String(rec.code || "");
   return t.length > 2500 ? t.slice(0, 2497) + "…" : t;
-}
-
-/**
- * Надіслати/оновити картку. Якщо Telegram не прийме згортану цитату
- * (старіша версія API), автоматично повторюємо без неї.
- */
-export async function tgCard(env, method, base, rec) {
-  let r = await tg(env, method, { ...base, text: renderCard(rec, true), parse_mode: "HTML" });
-  const bad = r && !r.ok && /parse entities|can't parse|unsupported/i.test(String(r.description || ""));
-  if (bad) r = await tg(env, method, { ...base, text: renderCard(rec, false), parse_mode: "HTML" });
-  return r;
 }
 
 export async function tg(env, method, payload) {
