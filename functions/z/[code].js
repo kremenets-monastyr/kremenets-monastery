@@ -80,7 +80,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
   .sh-tr,.sh-h{font-size:12pt!important;text-align:center}
   .code b{font-size:14pt}
 }
-.ucm{font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+.ucm{font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px auto;text-align:center;max-width:420px}
 .sh-n li{overflow-wrap:anywhere;word-break:break-word}
 .warr{background:#FFF7E6;border-radius:6px;padding:2px 6px}
 .freetag{font-size:11px;color:#8A6D1F;white-space:nowrap}

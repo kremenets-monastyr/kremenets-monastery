@@ -462,10 +462,10 @@ html,body{overflow-x:hidden}
 .xfoot .xdonate:hover{background:#fff;color:var(--blue-deep);border-color:#fff}
 
 /* Сторінка «Пожертва» */
-.dn-card{border-left:3px solid var(--gold)}
+.dn-card{border-left:3px solid var(--gold);text-align:center}
 .dn-req{background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
 .dn-pre{font-family:var(--ui);font-size:16px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin-bottom:14px;text-align:left}
-.dn-req .dn-copy{width:100%}
+.dn-copy{display:inline-block;margin:0 auto}
 .dn-fb{color:var(--muted);font-size:14px}
 
 

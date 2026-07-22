@@ -24,7 +24,8 @@ import crossRaw from '../data/chirho.js';
 
       <article class="pr-card dn-card">
         <h2>Реквізити для пожертви</h2>
-        <div class="dn-req" id="dnReq">Завантаження…</div>
+        <pre class="dn-req" id="dnReq">Завантаження…</pre>
+        <button type="button" class="cta2 dn-copy" id="dnCopy" hidden>Скопіювати реквізити</button>
         <p class="pr-soft">
           У коментарі до платежу можна написати <b>«Пожертва на монастир»</b>.
           Якщо ви бажаєте, щоб пожертва пішла на конкретну потребу — вкажіть це в коментарі
@@ -65,4 +66,26 @@ import crossRaw from '../data/chirho.js';
     </div>
   </section>
 
+  <script is:inline>
+    (function(){
+      var box=document.getElementById('dnReq'), copy=document.getElementById('dnCopy');
+      fetch('/api/requisites').then(function(r){return r.json();}).then(function(d){
+        if(d && d.ok && d.text){
+          box.textContent=d.text;
+          if(copy){
+            copy.hidden=false;
+            copy.addEventListener('click',function(){
+              navigator.clipboard.writeText(d.text);
+              var o=copy.textContent; copy.textContent='Скопійовано \u2713';
+              setTimeout(function(){copy.textContent=o;},1500);
+            });
+          }
+        } else {
+          box.textContent='Реквізити надасть обитель — зверніться до контактів.';
+        }
+      }).catch(function(){
+        box.textContent='Реквізити надасть обитель — зверніться до контактів.';
+      });
+    })();
+  </script>
 </Layout>
