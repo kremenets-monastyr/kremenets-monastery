@@ -257,6 +257,17 @@ export function copyNames(rec) {
   return t.length > 2500 ? t.slice(0, 2497) + "…" : t;
 }
 
+/**
+ * Надіслати/оновити картку. Якщо Telegram не прийме оформлення
+ * (наприклад, старіша версія API), автоматично повторюємо простим текстом.
+ */
+export async function tgCard(env, method, base, rec) {
+  let r = await tg(env, method, { ...base, text: renderCard(rec, true), parse_mode: "HTML" });
+  const bad = r && !r.ok && /parse entities|can't parse|unsupported/i.test(String(r.description || ""));
+  if (bad) r = await tg(env, method, { ...base, text: renderCard(rec, false), parse_mode: "HTML" });
+  return r;
+}
+
 export async function tg(env, method, payload) {
   const r = await fetch("https://api.telegram.org/bot" + env.TG_BOT_TOKEN + "/" + method, {
     method: "POST",
