@@ -33,6 +33,20 @@ import crossRaw from '../data/chirho.js';
       </article>
 
       <article class="pr-card">
+        <div class="dnrow" style="border:none;padding:0;margin:0">
+          <div class="dn-h">⛪ Сума пожертви <span class="opt">(за бажанням)</span></div>
+          <div class="dn-btns">
+            <button type="button" class="dn-b" data-v="50">50</button>
+            <button type="button" class="dn-b" data-v="100">100</button>
+            <button type="button" class="dn-b" data-v="200">200</button>
+            <button type="button" class="dn-b" data-v="500">500</button>
+            <input class="dn-i" id="pdOther" type="number" min="0" max="1000000" inputmode="numeric" placeholder="інша">
+          </div>
+        </div>
+        <div class="crow total" style="margin-top:14px"><span class="nm">До сплати</span><span class="v" id="pdSum">0 грн</span></div>
+      </article>
+
+      <article class="pr-card">
         <h2>На що йдуть пожертви</h2>
         <ul class="pr-list">
           <li>утримання й ремонт храмів обителі;</li>
@@ -95,6 +109,25 @@ import crossRaw from '../data/chirho.js';
         .catch(function () {
           box.innerHTML = '<span class="dn-fb">Реквізити надасть обитель — зверніться до контактів монастиря.</span>';
         });
+    })();
+  </script>
+  <script is:inline>
+    (function(){
+      var pick=0, other=document.getElementById('pdOther'), sumEl=document.getElementById('pdSum');
+      function fmt(v){ return (Number(v)||0).toLocaleString('uk-UA').replace(/\u00A0/g,' ')+' грн'; }
+      function set(v){
+        pick=Math.max(0,Math.min(1000000,Math.round(Number(v)||0)));
+        document.querySelectorAll('.dn-b').forEach(function(x){ x.classList.toggle('on', Number(x.dataset.v)===pick && pick>0); });
+        sumEl.textContent=fmt(pick);
+      }
+      document.querySelectorAll('.dn-b').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var v=Number(btn.dataset.v);
+          if(pick===v){ set(0); if(other)other.value=''; return; }
+          if(other)other.value=''; set(v);
+        });
+      });
+      if(other) other.addEventListener('input',function(){ set(other.value); });
     })();
   </script>
 </Layout>

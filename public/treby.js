@@ -290,17 +290,18 @@ function setExtra(v){
   computeTotals();
 }
 function initDonation(){
-  document.querySelectorAll('.dn-b').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var v=Number(btn.dataset.v);
-      var other=document.getElementById('dnOther');
-      if(extraDonation===v){ setExtra(0); if(other)other.value=''; return; }   // повторний клік — скасувати
-      if(other)other.value='';
-      setExtra(v);
-    });
+  if(window.__dnBound)return; window.__dnBound=true;   // вішаємо один раз
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest('.dn-b'); if(!btn)return;
+    var v=Number(btn.dataset.v);
+    var other=document.getElementById('dnOther');
+    if(extraDonation===v){ setExtra(0); if(other)other.value=''; return; }  // повторний клік — скасувати
+    if(other)other.value='';
+    setExtra(v);
   });
-  var other=document.getElementById('dnOther');
-  if(other) other.addEventListener('input',function(){ setExtra(other.value); });
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='dnOther') setExtra(e.target.value);
+  });
 }
 
 function buildPayload(){
