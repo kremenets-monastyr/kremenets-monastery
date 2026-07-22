@@ -45,41 +45,52 @@ export async function onRequestPost(context) {
 
   const caption = "🧾 <b>Квитанція про пожертву</b>\n№" + esc(code) + who;
 
-  // Куди саме класти фото: у тему записки й відповіддю на її картку
-  let rec = null;
-  try { rec = await getRecord(env, code); } catch (e) { rec = null; }
   const type = String(file.type || "");
   const isImage = type.indexOf("image/") === 0;
   const method = isImage ? "sendPhoto" : "sendDocument";
   const field = isImage ? "photo" : "document";
 
-  const fd = new FormData();
-  fd.append("chat_id", chat);
-  fd.append("caption", caption);
-  fd.append("parse_mode", "HTML");
-  if (rec && rec.threadId) fd.append("message_thread_id", String(rec.threadId));
-  if (rec && rec.msgId) fd.append("reply_to_message_id", String(rec.msgId));
-  fd.append(field, file, file.name || (isImage ? "receipt.jpg" : "receipt.pdf"));
+  let rec = null;
+  try { rec = await getRecord(env, code); } catch (e) { rec = null; }
 
   try {
+    // 1) Спершу переносимо картку в «Перевірку оплати», щоб квитанція лягла в ту саму тему
+    if (rec) {
+      rec.receipt = true;
+      rec.receiptTs = Date.now();
+      if (rec.status !== "paid") {
+        rec.status = "check";
+        addLog(rec, { kind: "status", to: "check", text: "надійшла квитанція — потрібна перевірка", who: "сайт" });
+      }
+      await saveRecord(env, rec);
+      await placeCard(env, rec);   // картка тепер у темі check із оновленим rec.threadId / rec.msgId
+    }
+
+    // 2) Квитанцію кладемо в ту саму тему, відповіддю на картку — щоб опинилась одразу під нею
+    const fd = new FormData();
+    fd.append("chat_id", chat);
+    fd.append("caption", caption);
+    fd.append("parse_mode", "HTML");
+    if (rec && rec.threadId) fd.append("message_thread_id", String(rec.threadId));
+    if (rec && rec.msgId) fd.append("reply_to_message_id", String(rec.msgId));
+    fd.append(field, file, file.name || (isImage ? "receipt.jpg" : "receipt.pdf"));
+
     const tg = await fetch("https://api.telegram.org/bot" + token + "/" + method, { method: "POST", body: fd });
     const d = await tg.json();
     if (!tg.ok || !d.ok) return json({ ok: false, error: "Не вдалося надіслати. Спробуйте ще раз." }, 502);
 
-    // Позначаємо квитанцію, переводимо картку в «Оплачено» і оновлюємо її в чаті
-    try {
-      if (rec) {
-        rec.receipt = true;
-        rec.receiptTs = Date.now();
-        // Оплату підтверджує лише сестра — квитанція йде на перевірку
-        if (rec.status !== "paid") {
-          rec.status = "check";
-          addLog(rec, { kind: "status", to: "check", text: "надійшла квитанція — потрібна перевірка", who: "сайт" });
-        }
-        await saveRecord(env, rec);
-        await placeCard(env, rec);
+    // 3) Запам'ятовуємо id квитанції в записі (стане в пригоді для майбутніх дій)
+    if (rec && d.result && d.result.message_id) {
+      rec.receiptMsgId = d.result.message_id;
+      rec.receiptIsDoc = !isImage;
+      // file_id найбільшого розміру фото (або документа) — щоб потім пересилати
+      if (isImage && Array.isArray(d.result.photo) && d.result.photo.length) {
+        rec.receiptFileId = d.result.photo[d.result.photo.length - 1].file_id;
+      } else if (d.result.document) {
+        rec.receiptFileId = d.result.document.file_id;
       }
-    } catch (e) { /* квитанція вже в чаті — не критично */ }
+      try { await saveRecord(env, rec); } catch (e) {}
+    }
 
     // копія квитанції в канал-архів
     if (env.TG_CHANNEL_ID) {

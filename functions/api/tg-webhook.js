@@ -148,6 +148,14 @@ export async function onRequestPost(context) {
       if (rec) {
         rec.receipt = true;
         rec.receiptTs = Date.now();
+        rec.receiptMsgId = msg.message_id;
+        if (msg.photo && msg.photo.length) {
+          rec.receiptFileId = msg.photo[msg.photo.length - 1].file_id;
+          rec.receiptIsDoc = false;
+        } else if (msg.document) {
+          rec.receiptFileId = msg.document.file_id;
+          rec.receiptIsDoc = true;
+        }
         if (rec.status !== "paid") {
           rec.status = "check";
           addLog(rec, { kind: "status", to: "check", text: "додано квитанцію — потрібна перевірка", who: personName(msg.from) });

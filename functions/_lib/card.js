@@ -359,6 +359,25 @@ export async function placeCard(env, rec) {
   if (res && res.ok && res.result) {
     rec.msgId = res.result.message_id;
     rec.threadId = thread;
+
+    // Якщо до записки прикріплена квитанція — переносимо її слідом,
+    // щоб картка й фото завжди стояли поруч у новій темі.
+    const oldReceipt = rec.receiptMsgId;
+    if (oldReceipt && rec.receiptFileId) {
+      const r2 = await tg(env, rec.receiptIsDoc ? "sendDocument" : "sendPhoto", {
+        chat_id: rec.chatId,
+        message_thread_id: thread,
+        reply_to_message_id: rec.msgId,
+        caption: "🧾 Квитанція · №" + rec.code,
+        [rec.receiptIsDoc ? "document" : "photo"]: rec.receiptFileId,
+        disable_notification: true,
+      });
+      if (r2 && r2.ok && r2.result) {
+        rec.receiptMsgId = r2.result.message_id;
+        await tg(env, "deleteMessage", { chat_id: rec.chatId, message_id: oldReceipt });
+      }
+    }
+
     await saveRecord(env, rec);
     if (oldMsg) await tg(env, "deleteMessage", { chat_id: rec.chatId, message_id: oldMsg });
   } else {
