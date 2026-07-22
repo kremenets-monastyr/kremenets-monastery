@@ -255,7 +255,9 @@ export async function onRequestGet(context) {
     return '<div class="sheet ' + ty.c + '"><div class="sh-h">' + ty.t + '</div><div class="sh-tr">' + treba +
       '</div>' + when + '<ul class="sh-n">' + names + '</ul><div class="sh-s">Сума: <b>' + sumTxt + '</b></div></div>';
   }).join("");
-  let tot = total > 0 ? money(total) : "";
+  const extra = Number(rec.extra) || 0;
+  const grandTotal = total + extra;
+  let tot = grandTotal > 0 ? money(grandTotal) : "";
   if (hasDon) tot = tot ? tot + " + пожертва" : "на пожертву";
   const nSheets = (rec.sheets || []).length;
   const nNames = (rec.sheets || []).reduce(function (a, s) { return a + ((s.names || []).length); }, 0);
