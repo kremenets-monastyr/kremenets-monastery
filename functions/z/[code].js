@@ -38,16 +38,16 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .code{text-align:center;color:var(--muted);font-size:14px;margin-bottom:4px}
 .code b{font-family:'Monomakh',serif;font-size:26px;color:var(--blue);display:inline-block;margin-top:2px;letter-spacing:.02em}
 .meta{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px}
-.sheet{border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.sheet{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center}
 .sheet.liv{border-left-color:var(--red)}
 .sh-h{font-family:'Monomakh',serif;color:var(--blue);font-size:19px}
 .sheet.liv .sh-h{color:var(--red)}
 .sh-tr{color:var(--muted);font-size:13px;margin:2px 0 6px}
-.sh-n{list-style:none;font-size:15px;margin-bottom:6px}
+.sh-n{list-style:none;font-size:15px;margin-bottom:6px;text-align:center}
 .sh-n li{padding:1px 0}
 .sh-s{font-size:14px}
 .telx{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
-.tohome{display:inline-block;margin-bottom:14px;font-size:14px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:#fff}
+.tohome{display:inline-block;margin:0 auto 14px;font-size:14px;color:var(--blue);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:#fff}
 .tohome:hover{border-color:var(--blue);background:var(--bg)}
 .step-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:10px}
 .req.step1{border:2px solid #C79A3B;background:#FFFCF5}
@@ -77,7 +77,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
   .acc-b{display:block!important}
   .sheet{page-break-inside:avoid}
   .sh-n li{font-size:12pt!important;line-height:1.7}
-  .sh-tr,.sh-h{font-size:12pt!important}
+  .sh-tr,.sh-h{font-size:12pt!important;text-align:center}
   .code b{font-size:14pt}
 }
 .ucm{font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);border-radius:10px;padding:10px 12px;margin:10px 0}
@@ -119,7 +119,7 @@ h1{font-family:'Monomakh',serif;font-weight:400;color:var(--blue);font-size:26px
 .two>*{min-width:0;margin-bottom:0}
 .two .rc,.two .req{margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-start;width:100%;box-sizing:border-box;text-align:center}
 .two .step-tag{align-self:center}
-.two .req pre{text-align:left}
+.two .req pre{text-align:center}
 
 .rc.done{border-style:solid;border-color:var(--blue);background:#E4EBF7}
 @media(max-width:600px){
@@ -230,7 +230,7 @@ export async function onRequestGet(context) {
   if (!rec) {
     const inner =
       '<div class="wrap"><div class="card">' +
-      '<a class="tohome" href="' + origin + '/">← На головну</a>' +
+      '<div style="text-align:center"><a class="tohome" href="' + origin + '/">← На головну</a></div>' +
     '<div class="brand">Свято-Богоявленський Кременецький<br>жіночий монастир</div>' +
       '<h1>Записки не знайдено</h1>' +
       '<p class="muted">Запис за номером <b>' + esc(code) + '</b> не знайдено. Можливо, минуло понад 7 днів або номер введено з помилкою.</p>' +
@@ -299,7 +299,7 @@ export async function onRequestGet(context) {
 
   const inner =
     '<div class="wrap"><div class="card">' +
-    '<a class="tohome" href="' + origin + '/">← На головну</a>' +
+    '<div style="text-align:center"><a class="tohome" href="' + origin + '/">← На головну</a></div>' +
     '<div class="brand">Свято-Богоявленський Кременецький<br>жіночий монастир</div>' +
     '<h1>Ваші записки</h1>' +
     '<div class="code">Номер запису<br><b>' + esc(rec.code || code) + '</b></div>' +
