@@ -96,9 +96,10 @@ const fmt=v=>v.toLocaleString('uk-UA')+' грн';
 const TYPE={living:{ttl:"За здоров'я",cls:'living'},dead:{ttl:"За упокій",cls:'dead'}};
 let sheets=[],uid=0;
 
-function addSheet(type){uid++;sheets.push({id:uid,type,treba:null,names:['']});render();
+function blankNames(n){var a=[];for(var i=0;i<(n||START_ROWS);i++)a.push('');return a;}
+function addSheet(type){uid++;sheets.push({id:uid,type,treba:null,names:blankNames()});render();
   setTimeout(()=>document.getElementById('sheet-'+uid)?.scrollIntoView({behavior:'smooth',block:'center'}),60);}
-function orderFromList(type,n){uid++;sheets.push({id:uid,type,treba:n,names:['']});render();
+function orderFromList(type,n){uid++;var tr=TREBY.find(x=>x.n===n);var lim=(tr&&tr.maxNames)?tr.maxNames:Infinity;sheets.push({id:uid,type,treba:n,names:blankNames(Math.min(START_ROWS,lim))});render();
   setTimeout(()=>document.getElementById('sheet-'+uid)?.scrollIntoView({behavior:'smooth',block:'center'}),80);}
 function goToSheet(id){const el=document.getElementById('sheet-'+id),s=sheets.find(x=>x.id===id);if(!el)return;el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');setTimeout(()=>{let t;if(s&&s.treba==null){t=el.querySelector('select');}else{const inps=[...el.querySelectorAll('.nrow input')];t=inps.find(i=>!i.value.trim())||inps[inps.length-1];}t&&t.focus({preventScroll:true});},380);}
 function cardClick(e,id){if(e.target.closest('input,select,button,textarea,a'))return;const root=document.getElementById('sheet-'+id),s=sheets.find(x=>x.id===id);if(!root||!s)return;if(s.treba==null){const sel=root.querySelector('select');sel&&sel.focus();}else{const inps=[...root.querySelectorAll('.nrow input')],t=inps.find(i=>!i.value.trim())||inps[inps.length-1];t&&t.focus();}}
@@ -113,25 +114,73 @@ function setTreba(id,n){
 function setWhen(id,v){const s=sheets.find(x=>x.id===id);s.when=String(v||'').slice(0,WHEN_MAX);}
 function setName(id,i,v){
   const s=sheets.find(x=>x.id===id);
-  if(v&&v.length>NAME_MAX)v=v.slice(0,NAME_MAX);
+  if(!s || i>=nameLimit(s)) return;      // не даємо вийти за межу треби
+  v=String(v||'');
+
+  /* Люди часто вписують кілька імен в один рядок через кому —
+     розкладаємо їх по окремих рядках, щоб і ціна, і синодик були правильні. */
+  if(/[,;]/.test(v)){
+    const parts=v.split(/[,;]+/).map(x=>x.trim().slice(0,NAME_MAX)).filter(Boolean);
+    const lim=nameLimit(s);
+    if(parts.length>1){
+      let merged=s.names.slice(0,i).concat(parts, s.names.slice(i+1));
+      if(merged.length>lim){ merged=merged.slice(0,lim); toast('У цій требі — до '+lim+' імен. Зайві прибрано.'); }
+      s.names=merged;
+      ensureSpareRows(s);
+      render();
+      focusRow(id, Math.min(i+parts.length, s.names.length-1));
+      return;
+    }
+    // одне імʼя з комою в кінці — переходимо на наступний рядок
+    v=parts[0]||'';
+    s.names[i]=v;
+    if(i+1>=s.names.length && s.names.length<lim) s.names.push('');
+    render();
+    focusRow(id, Math.min(i+1, s.names.length-1));
+    return;
+  }
+
+  if(v.length>NAME_MAX)v=v.slice(0,NAME_MAX);
   const was=isWarrior(s.names[i]);
+  const pos=caretPos();
   s.names[i]=v;
-  if(was!==isWarrior(v)){ render(); const el=document.querySelector('#sheet-'+id+' .nrow:nth-of-type('+(i+1)+') input'); if(el){el.focus();el.setSelectionRange(v.length,v.length);} return; }
+  const grew=ensureSpareRows(s);
+  if(was!==isWarrior(v) || grew){ render(); focusRow(id,i,pos==null?v.length:pos); return; }
   updateSheetSum(s);computeTotals();
+}
+/* Тримаємо в кінці запас порожніх рядків, щоб не треба було тиснути кнопку */
+function ensureSpareRows(s){
+  const lim=nameLimit(s);
+  let trailing=0;
+  for(let k=s.names.length-1;k>=0;k--){
+    if(String(s.names[k]||'').trim()==='') trailing++; else break;
+  }
+  let added=false;
+  while(trailing<SPARE_ROWS && s.names.length<lim){ s.names.push(''); trailing++; added=true; }
+  return added;
+}
+function caretPos(){
+  const el=document.activeElement;
+  return (el && el.tagName==='INPUT' && el.selectionStart!=null) ? el.selectionStart : null;
+}
+function focusRow(id,i,pos){
+  const rows=document.querySelectorAll('#sheet-'+id+' .nrow input');
+  const el=rows[i];
+  if(!el)return;
+  el.focus();
+  const p=(pos==null)?el.value.length:pos;
+  try{el.setSelectionRange(p,p);}catch(e){}
 }
 function updateSheetSum(s){const sm=sheetSum(s),txt=sm==null?'—':sm.kind==='donation'?'пожертва':fmt(sm.v);const el=document.querySelector('#sheet-'+s.id+' .sum');if(el)el.textContent=txt;}
 var DONATION_MAX = 20;
-var NAME_MAX = 70;      // максимальна довжина одного імені з приписками
+var START_ROWS = 3;     // скільки рядків показуємо одразу
+var SPARE_ROWS = 2;     // скільки вільних рядків тримаємо в запасі
+var NAME_MAX = 40;      // максимальна довжина одного рядка (імʼя з приписками)
 var WHEN_MAX = 60;      // максимальна довжина поля «на яке число» // ліміт імен для треби «За 1 записку» (на пожертву)
 function trebaOf(s){ return s.treba!=null ? TREBY.find(x=>x.n===s.treba) : null; }
 function nameLimit(s){ const tr=trebaOf(s); return (tr&&tr.maxNames) ? tr.maxNames : Infinity; }
 function asksWhen(s){ const tr=trebaOf(s); return !!(tr&&tr.askWhen); }
-function addName(id){
-  const s=sheets.find(x=>x.id===id);
-  if(s.names.length>=nameLimit(s)){toast('У цій требі — до '+DONATION_MAX+' імен. Для більшої кількості створіть ще одну записку.');return;}
-  s.names.push('');render();
-}
-function delName(id,i){const s=sheets.find(x=>x.id===id);s.names.splice(i,1);if(!s.names.length)s.names=[''];render();}
+function delName(id,i){const s=sheets.find(x=>x.id===id);s.names.splice(i,1);if(!s.names.length)s.names=[''];ensureSpareRows(s);render();}
 
 /* Поминання воїнів обитель приймає безкоштовно.
    Розпізнаємо приписки: воїн, в., боєць, безвісти, полонений тощо. */
@@ -193,8 +242,8 @@ function render(){
       <div class="zrule"></div>
       <div class="treba"><label>Треба</label><select onchange="setTreba(${s.id},this.value)">${optHtml}</select><div class="meta">${meta}</div></div>
       ${asksWhen(s)?`<div class="whenrow"><label class="wlbl">На яке число замовити <span class="wopt">(за бажанням)</span></label><input class="winp" type="text" maxlength="${WHEN_MAX}" value="${(s.when||'').replace(/"/g,'&quot;')}" placeholder="напр. на 40-й день, 12 серпня, у батьківську суботу" oninput="setWhen(${s.id},this.value)"></div>`:''}
-      <div class="nlbl">Імена <span class="nhint">(вписуйте лише імена, по одному в рядок — для прохань є поле «Коментар» унизу)</span></div>
-      <div class="names">${names}<button class="addname" onclick="addName(${s.id})" ${s.names.length>=nameLimit(s)?'disabled':''}>${s.names.length>=nameLimit(s)?'Максимум '+DONATION_MAX+' імен':'Додати імʼя'}</button><div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div>${warriorTooLong(s)
+      <div class="nlbl">Імена <span class="nhint">(одне імʼя в один рядок; для прохань є поле «Коментар» унизу)</span></div>
+      <div class="names">${names}<div class="znote">${s.names.length>=nameLimit(s)?'У цій требі — до '+DONATION_MAX+' імен. Для інших створіть ще одну записку.':(isL?'За потреби — примітка: болящого, воїна, подорожуючого':'За потреби — примітка: новопреставленого, приснопамʼятного, воїна')}</div>${warriorTooLong(s)
   ? '<div class="warr-note warr-stop">⚠️ <b>За здоровʼя воїнів приймаємо на термін до 1 місяця (40 днів).</b> Оберіть «1 день», «40 днів · сорокоуст» або «1 місяць». Коли термін вийде, попросимо подати записку знову.</div>'
   : '<div class="warr-note">🕯 <b>Воїнів обитель поминає безкоштовно.</b> Додайте до імені припис: «воїн», «в.», «полоненого», «безвісти зниклого». За здоровʼя — на термін до 1 місяця (40 днів), за упокій — на будь-який термін.</div>'}</div>
       <div class="zfoot"><span class="lbl">Сума по записці</span><span class="sum">${sumTxt}</span></div>`;

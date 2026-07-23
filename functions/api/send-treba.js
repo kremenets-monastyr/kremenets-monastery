@@ -111,12 +111,20 @@ export async function onRequestPost(context) {
   }
 
   // Захист від надмірно довгих значень (форму можна обійти)
-  const NAME_MAX_SRV = 70, WHEN_MAX_SRV = 60, NAMES_PER_SHEET = 50;
+  const NAME_MAX_SRV = 40, WHEN_MAX_SRV = 60, NAMES_PER_SHEET = 50;
   sheets.forEach((sh) => {
-    sh.names = (Array.isArray(sh.names) ? sh.names : [])
-      .map((n) => String(n == null ? "" : n).trim().slice(0, NAME_MAX_SRV))
-      .filter(Boolean)
-      .slice(0, NAMES_PER_SHEET);
+    const raw = Array.isArray(sh.names) ? sh.names : [];
+    const out = [];
+    raw.forEach((n) => {
+      // Кілька імен в одному рядку через кому — розкладаємо окремо
+      String(n == null ? "" : n)
+        .split(/[,;]+/)
+        .forEach((part) => {
+          const v = part.trim().slice(0, NAME_MAX_SRV);
+          if (v) out.push(v);
+        });
+    });
+    sh.names = out.slice(0, NAMES_PER_SHEET);
     if (sh.when) sh.when = String(sh.when).trim().slice(0, WHEN_MAX_SRV);
     sh.trebaTitle = String(sh.trebaTitle || "").slice(0, 80);
     sh.trebaGroup = String(sh.trebaGroup || "").slice(0, 80);
